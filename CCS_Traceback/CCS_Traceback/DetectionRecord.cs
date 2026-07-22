@@ -1,0 +1,76 @@
+using System;
+using System.Collections.Generic;
+
+namespace CCS_Traceback
+{
+    /// <summary>
+    /// 一行 CSV 检测记录的内存表示。
+    /// 状态判定规则:第 3 列(第一个 1结果)的值为 N -> NG,Y -> OK,其他原样保留。
+    /// </summary>
+    public class DetectionRecord
+    {
+        /// <summary>序号(本文件内从 1 起的行号,跳过表头)。</summary>
+        public int Seq { get; set; }
+
+        /// <summary>编号 —— 当天内唯一,用来区分同一产品的多次检测。</summary>
+        public string Alias { get; set; }
+
+        /// <summary>二维码内容。</summary>
+        public string QrCode { get; set; }
+
+        /// <summary>第 1 个结果的原始值(原始大小写都可能出现)。</summary>
+        public string ResultRaw { get; set; }
+
+        /// <summary>第 2 个结果的原始值(同样来自第二个 1结果 列)。</summary>
+        public string Result2Raw { get; set; }
+
+        /// <summary>原因 / 缺陷描述(可能为空)。</summary>
+        public string Reason { get; set; }
+
+        /// <summary>检测时间。</summary>
+        public DateTime Time { get; set; }
+
+        /// <summary>第 1 个 MES 返回值。</summary>
+        public string MesReturn1 { get; set; }
+
+        /// <summary>第 2 个 MES 返回值。</summary>
+        public string MesReturn2 { get; set; }
+
+        /// <summary>规范化后的大写结果串(N / Y / 其他)。</summary>
+        public string StatusRaw => (ResultRaw ?? string.Empty).Trim().ToUpperInvariant();
+
+        public bool IsNg => StatusRaw == "N";
+        public bool IsOk => StatusRaw == "Y";
+
+        /// <summary>列表上显示的状态文字:NG / OK,带原因时附在后面用 " - " 分隔。</summary>
+        public string StatusDisplay
+        {
+            get
+            {
+                string core = IsNg ? "NG" : (IsOk ? "OK" : (ResultRaw ?? string.Empty));
+                if (!string.IsNullOrWhiteSpace(Reason))
+                    return core + " - " + Reason;
+                return core;
+            }
+        }
+
+        /// <summary>
+        /// 从 Reason 中按分隔符切出来的所有缺陷类型(去空白、去空)。
+        /// Reason 字段实际写法是 "缺陷A,缺陷B,缺陷C,"(逗号分隔,可能有中英文/分号/尾部空)。
+        /// </summary>
+        public IEnumerable<string> DefectTypes
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(Reason))
+                    yield break;
+                foreach (var part in Reason.Split(new[] { ',', '，', ';', '；' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    var t = part.Trim();
+                    if (!string.IsNullOrEmpty(t))
+                        yield return t;
+                }
+            }
+        }
+    }
+}

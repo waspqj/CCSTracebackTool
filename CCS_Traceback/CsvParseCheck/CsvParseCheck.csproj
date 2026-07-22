@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net472</TargetFramework>
+    <RootNamespace>CsvParseCheck</RootNamespace>
+    <AssemblyName>CsvParseCheck</AssemblyName>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\CCS_Traceback\DetectionRecord.cs">
+      <Link>DetectionRecord.cs</Link>
+    </Compile>
+    <Compile Include="..\CCS_Traceback\CsvLogReader.cs">
+      <Link>CsvLogReader.cs</Link>
+    </Compile>
+  </ItemGroup>
+</Project>
