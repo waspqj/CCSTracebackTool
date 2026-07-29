@@ -470,7 +470,11 @@ namespace CCS_Traceback
 
             _suppressAliasRefresh = false;
 
-            // 主窗体顶上来 —— 子窗体保持打开
+            // 主窗体顶上来 —— 子窗体保持打开。
+            // 关键:同上面按二维码统计按钮,主窗体被最小化时 Activate() 不会还原,
+            // 必须先把 WindowState 设回 Normal。
+            if (this.WindowState == FormWindowState.Minimized)
+                this.WindowState = FormWindowState.Normal;
             this.Activate();
             this.BringToFront();
         }
@@ -524,7 +528,12 @@ namespace CCS_Traceback
                 if (sameAsLastLoaded)
                 {
                     // 同一份数据 + 同一时段 → 激活已有窗口、不弹新窗
+                    // 关键:如果窗口被最小化,Activate() 不会还原,必须先把 WindowState
+                    // 设回 Normal,然后再激活 + 顶到前面,否则用户得去任务栏点。
+                    if (_qrStatsForm.WindowState == FormWindowState.Minimized)
+                        _qrStatsForm.WindowState = FormWindowState.Normal;
                     _qrStatsForm.Activate();
+                    _qrStatsForm.BringToFront();
                     return;
                 }
 

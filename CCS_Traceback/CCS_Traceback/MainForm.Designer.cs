@@ -50,9 +50,7 @@ namespace CCS_Traceback
             this.btnUpdate = new System.Windows.Forms.Button();
             this.pnlTime = new System.Windows.Forms.Panel();
             this.label1 = new System.Windows.Forms.Label();
-            this.lblTo = new System.Windows.Forms.Label();
             this.mtbEndTime = new System.Windows.Forms.MaskedTextBox();
-            this.lblFrom = new System.Windows.Forms.Label();
             this.mtbStartTime = new System.Windows.Forms.MaskedTextBox();
             this.lblDate = new System.Windows.Forms.Label();
             this.dtpDate = new System.Windows.Forms.DateTimePicker();
@@ -340,9 +338,7 @@ namespace CCS_Traceback
             // pnlTime
             // 
             this.pnlTime.Controls.Add(this.label1);
-            this.pnlTime.Controls.Add(this.lblTo);
             this.pnlTime.Controls.Add(this.mtbEndTime);
-            this.pnlTime.Controls.Add(this.lblFrom);
             this.pnlTime.Controls.Add(this.mtbStartTime);
             this.pnlTime.Controls.Add(this.lblDate);
             this.pnlTime.Controls.Add(this.dtpDate);
@@ -356,22 +352,11 @@ namespace CCS_Traceback
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(334, 66);
+            this.label1.Location = new System.Drawing.Point(377, 69);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(26, 18);
             this.label1.TabIndex = 6;
             this.label1.Text = "--";
-            // 
-            // lblTo
-            // 
-            this.lblTo.AutoSize = true;
-            this.lblTo.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F);
-            this.lblTo.Location = new System.Drawing.Point(402, 56);
-            this.lblTo.Margin = new System.Windows.Forms.Padding(0, 0, 5, 0);
-            this.lblTo.Name = "lblTo";
-            this.lblTo.Size = new System.Drawing.Size(44, 31);
-            this.lblTo.TabIndex = 4;
-            this.lblTo.Text = "到:";
             // 
             // mtbEndTime
             // 
@@ -384,17 +369,6 @@ namespace CCS_Traceback
             this.mtbEndTime.TabIndex = 5;
             this.mtbEndTime.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
-            // lblFrom
-            // 
-            this.lblFrom.AutoSize = true;
-            this.lblFrom.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F);
-            this.lblFrom.Location = new System.Drawing.Point(29, 56);
-            this.lblFrom.Margin = new System.Windows.Forms.Padding(0, 0, 5, 0);
-            this.lblFrom.Name = "lblFrom";
-            this.lblFrom.Size = new System.Drawing.Size(44, 31);
-            this.lblFrom.TabIndex = 2;
-            this.lblFrom.Text = "从:";
-            // 
             // mtbStartTime
             // 
             this.mtbStartTime.Font = new System.Drawing.Font("Microsoft YaHei UI", 14F);
@@ -402,7 +376,7 @@ namespace CCS_Traceback
             this.mtbStartTime.Margin = new System.Windows.Forms.Padding(4);
             this.mtbStartTime.Mask = "00:00";
             this.mtbStartTime.Name = "mtbStartTime";
-            this.mtbStartTime.Size = new System.Drawing.Size(209, 43);
+            this.mtbStartTime.Size = new System.Drawing.Size(226, 43);
             this.mtbStartTime.TabIndex = 3;
             this.mtbStartTime.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
@@ -688,9 +662,7 @@ namespace CCS_Traceback
         private System.Windows.Forms.Panel pnlTime;
         private System.Windows.Forms.Label lblDate;
         private System.Windows.Forms.DateTimePicker dtpDate;
-        private System.Windows.Forms.Label lblFrom;
         private System.Windows.Forms.MaskedTextBox mtbStartTime;
-        private System.Windows.Forms.Label lblTo;
         private System.Windows.Forms.MaskedTextBox mtbEndTime;
         private System.Windows.Forms.Button btnUpdate;
         private System.Windows.Forms.Button btnQrStatistics;
