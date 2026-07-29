@@ -17,6 +17,30 @@ namespace CCS_Traceback
         // 缺陷类型出现次数缓存(供柱状图绘制)
         private Dictionary<string, int> _defectCounts = new Dictionary<string, int>();
 
+        // 双击 QrStatisticsForm 行回填时,设 cboQr 会触发 cboQr_SelectedIndexChanged 重铺 alias,
+        // 这个 flag 用来短路联动,让我们在 SelectQrAndAlias 里手动选 alias 时不被覆盖
+        private bool _suppressAliasRefresh;
+
+        // 从 ApplicationSetting.json 加载到的 MES 日志根目录。
+        // 没有加载成功时为 null —— 数据按钮(更新数据 / 按二维码统计)保持禁用。
+        private string _mesLogRoot;
+
+        // 上一次成功 "更新数据" 时缓存的日期 + 时段。
+        // 再次点击 btnUpdate 时,如果日期和时段完全没变就直接 return,不重复读 CSV、不弹窗。
+        // 同时也是 "按二维码统计" 一对一窗口的失效判定 —— 缓存更新后旧窗口就算过期。
+        private DateTime? _lastLoadedDate;
+        private TimeSpan? _lastLoadedStart;
+        private TimeSpan? _lastLoadedEnd;
+
+        // 当前已打开的 "按二维码统计" 窗口引用,保持一对一一窗口。
+        // 关掉后通过 FormClosed 事件清回 null。
+        private QrStatisticsForm _qrStatsForm;
+
+        // ApplicationSetting.json 反序列化出来的完整 DTO。
+        // 启动时 MainForm_Load 从 exe 同目录加载,失败则为 null。
+        // btnUpdate 用 PathMesLog,btnScanFiles 用 NGImgSave。
+        private ApplicationSettingDto _appConfig;
+
         // 柱状图配色(循环使用)
         private static readonly Color[] ChartColors =
         {
@@ -56,6 +80,32 @@ namespace CCS_Traceback
             mtbStartTime.Text = "00:00";
             mtbEndTime.Text = "23:59";
 
+            // 启动时自动从 exe 同目录找 ApplicationSetting.json 加载。
+            // 失败就弹错禁用三个数据按钮(更新数据 / 按二维码统计 / 扫描文件)。
+            string jsonPath = System.IO.Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory, "ApplicationSetting.json");
+            try
+            {
+                _appConfig = ConfigLoader.Load(jsonPath);
+                _mesLogRoot = _appConfig.PathMesLog;
+                btnUpdate.Enabled = true;
+                btnQrStatistics.Enabled = true;
+                if (btnScanFiles != null) btnScanFiles.Enabled = true;
+            }
+            catch (ConfigLoadException ex)
+            {
+                _appConfig = null;
+                _mesLogRoot = null;
+                btnUpdate.Enabled = false;
+                btnQrStatistics.Enabled = false;
+                if (btnScanFiles != null) btnScanFiles.Enabled = false;
+                MessageBox.Show(
+                    $"启动失败:找不到或无法解析 exe 同目录下的 ApplicationSetting.json。\n\n" +
+                    $"期望路径:\n  {jsonPath}\n\n" +
+                    $"错误详情:\n  {ex.Message}",
+                    "加载配置失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
             // 左右比例 1:2(Panel1 占总宽的 1/3,Panel2 占 2/3)
             int total = Screen.PrimaryScreen.Bounds.Width;
             int leftWidth = (int)((total - splitMain.SplitterWidth) / 3.0);
@@ -73,63 +123,32 @@ namespace CCS_Traceback
         }
 
         /// <summary>
-        /// dgvNgList 启动时显示一行占位,提示要先点 "更新数据"。
+        /// dgvNgList 启动时显示一行占位,提示要先点 "扫描文件"。
+        /// 现在 dgvNgList 由 btnScanFiles 喂文件行,不是从 CSV 拿 NG。
         /// </summary>
-        private void ShowEmptyNgList()
+        private void ShowEmptyNgList(string tip = "请先选二维码+编号再点 \"扫描文件\"")
         {
             dgvNgList.Rows.Clear();
             var row = new DataGridViewRow();
             row.CreateCells(dgvNgList);
             row.Cells[0].Value = "—";
             row.Cells[1].Value = "—";
-            row.Cells[2].Value = "(无数据)";
-            row.Cells[3].Value = "请先点 \"更新数据\" 加载 CSV";
-            row.Cells[4].Value = "";
+            row.Cells[2].Value = "—";
+            row.Cells[3].Value = "—";
+            row.Cells[4].Value = tip;
             row.Cells[5].Value = "";
             row.Cells[6].Value = "";
             dgvNgList.Rows.Add(row);
         }
 
         /// <summary>
-        /// 把当前 _records 里的 NG 行喂给 dgvNgList。
+        /// 同一 processName 内从 1 起累加的序号 key(processName 是中文也好英文也好,直接当 key)。
+        /// 同一扫描批次内递增,重新扫描会清空重来。
         /// </summary>
-        private void RefreshNgList()
+        private static string NgTypeKey(DetectionRecord r)
         {
-            dgvNgList.Rows.Clear();
-            if (_records == null || _records.Count == 0)
-            {
-                ShowEmptyNgList();
-                return;
-            }
-
-            var ngList = _records.Where(r => r.IsNg).ToList();
-            if (ngList.Count == 0)
-            {
-                var row = new DataGridViewRow();
-                row.CreateCells(dgvNgList);
-                row.Cells[0].Value = "—";
-                row.Cells[1].Value = "—";
-                row.Cells[2].Value = "OK";
-                row.Cells[3].Value = "当前时段无 NG 记录";
-                row.Cells[4].Value = "";
-                row.Cells[5].Value = "";
-                row.Cells[6].Value = "";
-                dgvNgList.Rows.Add(row);
-                return;
-            }
-
-            foreach (var r in ngList)
-            {
-                string defects = string.Join(" | ", r.DefectTypes);
-                dgvNgList.Rows.Add(
-                    r.Time.ToString("HH:mm:ss"),
-                    r.QrCode,
-                    "NG",
-                    r.Alias,
-                    defects,
-                    r.Seq.ToString(),
-                    ""); // 图像路径后续接
-            }
+            if (r == null || string.IsNullOrWhiteSpace(r.ProcessName)) return "(未分类)";
+            return r.ProcessName.Trim();
         }
 
         /// <summary>
@@ -165,9 +184,18 @@ namespace CCS_Traceback
                 return;
             }
 
+            // 日期 + 时段没变 → 不重复读 CSV、不弹窗
+            if (_lastLoadedDate.HasValue && _lastLoadedStart.HasValue && _lastLoadedEnd.HasValue
+                && _lastLoadedDate.Value == date
+                && _lastLoadedStart.Value == startTs
+                && _lastLoadedEnd.Value == endTs)
+            {
+                return;
+            }
+
             var reader = new CsvLogReader();
             int matchedFiles;
-            _records = reader.ReadRange(Globals.PathMegLog, startTime, endTime, out matchedFiles);
+            _records = reader.ReadRange(_mesLogRoot, startTime, endTime, out matchedFiles);
 
             // 二维码:去重 + 排序
             var qrs = _records.Select(r => r.QrCode)
@@ -197,9 +225,7 @@ namespace CCS_Traceback
             int ngCount = _records.Count(r => r.IsNg);
             UpdateStatsText(matchedFiles, _records.Count, qrs.Count, aliases.Count, ngCount);
 
-            // 同步刷新底部 NG 行列表
-            RefreshNgList();
-
+            // dgvNgList 现在由 btnScanFiles 喂文件行 —— "更新数据" 只刷统计/柱状图,不刷行列表
             // 刷新缺陷类型柱状图
             BuildDefectCounts();
 
@@ -207,6 +233,170 @@ namespace CCS_Traceback
                 $"日期 {date:yyyy-MM-dd} 匹配 {matchedFiles} 个 CSV。\n" +
                 $"时段 {startTs:hh\\:mm} ~ {endTs:hh\\:mm} 内载入 {_records.Count} 条记录。",
                 "更新数据", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            // 缓存本次成功加载的日期 + 时段,用于重复点击守卫
+            _lastLoadedDate = date;
+            _lastLoadedStart = startTs;
+            _lastLoadedEnd = endTs;
+        }
+
+        /// <summary>
+        /// 扫描按钮:基于当前选中的 cboQr + cboAlias + dtpDate,扫 _appConfig.NGImgSave
+        /// 下的所有 NG 错图,结果喂给 dgvNgList。
+        /// </summary>
+        private void btnScanFiles_Click(object sender, EventArgs e)
+        {
+            if (_appConfig == null)
+            {
+                MessageBox.Show("请先加载配置(ApplicationSetting.json)。",
+                    "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            string qr = cboQr.SelectedItem as string;
+            string alias = cboAlias.SelectedItem as string;
+            // 选 "(全部)" 时拒绝扫描 —— 必须选到具体 QR + Alias
+            if (string.IsNullOrEmpty(qr) || qr == AllSentinel)
+            {
+                MessageBox.Show("请先在 \"二维码\" 下拉里选中具体二维码,再扫描。",
+                    "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            if (string.IsNullOrEmpty(alias))
+            {
+                MessageBox.Show("请先在 \"编号\" 下拉里选中具体编号,再扫描。",
+                    "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            DateTime date = dtpDate.Value.Date;
+            var files = FileScanner.Scan(qr, alias, date, _appConfig.NGImgSave);
+
+            // 喂给 dgvNgList —— 只列 NG
+            dgvNgList.Rows.Clear();
+            if (files.Count == 0)
+            {
+                ShowEmptyNgList("(该产品当天没有 NG 错图)");
+                return;
+            }
+
+            // 每种 processName 内从 1 起累加 + 全局从 1 起累加
+            var typeCounters = new Dictionary<string, int>();
+            int globalSeq = 0;
+            foreach (var r in files)
+            {
+                string typeKey = NgTypeKey(r);
+                typeCounters.TryGetValue(typeKey, out int typeSeq);
+                typeSeq++;
+                typeCounters[typeKey] = typeSeq;
+                globalSeq++;
+
+                // 列顺序:序号 / 检测类型 / 时间 / 判定 / 原因 / 文件名 / 路径
+                dgvNgList.Rows.Add(
+                    globalSeq.ToString(),
+                    $"{typeKey}_{typeSeq}",
+                    r.Time.ToString("HH:mm:ss.fff"),
+                    r.IsNg ? "NG" : "OK",
+                    r.FileReason ?? "",
+                    r.FileName ?? "",
+                    r.FilePath ?? "");
+                // NG 错图全行高亮
+                int idx = dgvNgList.Rows.Count - 1;
+                dgvNgList.Rows[idx].DefaultCellStyle.BackColor = Color.MistyRose;
+                dgvNgList.Rows[idx].DefaultCellStyle.Font =
+                    new Font(dgvNgList.Font, FontStyle.Bold);
+            }
+        }
+
+        /// <summary>
+        /// dgvNgList 双击某行:把"文件路径"列对应的文件装到 pnlImageBox 预览。
+        /// .jpg/.bmp/.png → picImagePreview;.txt → txtImageTextPreview。
+        /// </summary>
+        private void dgvNgList_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+            var row = dgvNgList.Rows[e.RowIndex];
+            // 文件路径在 colNgPath(按列名取,索引依赖列顺序)
+            string path = row.Cells["colNgPath"].Value as string;
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                ClearImagePreview();
+                return;
+            }
+            if (!System.IO.File.Exists(path))
+            {
+                MessageBox.Show("文件不存在:\n" + path,
+                    "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ClearImagePreview();
+                return;
+            }
+
+            string ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
+            if (ext == ".jpg" || ext == ".bmp" || ext == ".png" || ext == ".jpeg")
+            {
+                ShowImagePreview(path);
+            }
+            else if (ext == ".txt")
+            {
+                ShowTextPreview(path);
+            }
+            else
+            {
+                MessageBox.Show("不支持的文件类型: " + ext,
+                    "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                ClearImagePreview();
+            }
+        }
+
+        private void ShowImagePreview(string path)
+        {
+            try
+            {
+                // 先 Dispose 旧的,否则文件被锁住
+                if (picImagePreview.Image != null)
+                {
+                    picImagePreview.Image.Dispose();
+                    picImagePreview.Image = null;
+                }
+                picImagePreview.Image = Image.FromFile(path);
+                picImagePreview.Visible = true;
+                txtImageTextPreview.Visible = false;
+                lblImagePlaceholder.Visible = false;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("无法加载图像: " + ex.Message,
+                    "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ClearImagePreview();
+            }
+        }
+
+        private void ShowTextPreview(string path)
+        {
+            try
+            {
+                txtImageTextPreview.Text = System.IO.File.ReadAllText(path, System.Text.Encoding.UTF8);
+                txtImageTextPreview.Visible = true;
+                picImagePreview.Visible = false;
+                lblImagePlaceholder.Visible = false;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("无法读取文本: " + ex.Message,
+                    "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ClearImagePreview();
+            }
+        }
+
+        private void ClearImagePreview()
+        {
+            if (picImagePreview.Image != null)
+            {
+                picImagePreview.Image.Dispose();
+                picImagePreview.Image = null;
+            }
+            picImagePreview.Visible = false;
+            txtImageTextPreview.Visible = false;
+            lblImagePlaceholder.Visible = true;
         }
 
         /// <summary>
@@ -215,7 +405,7 @@ namespace CCS_Traceback
         /// </summary>
         private void cboQr_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (_records == null) return;
+            if (_records == null || _suppressAliasRefresh) return;
 
             string selectedQr = cboQr.SelectedItem as string;
             bool isAll = string.IsNullOrEmpty(selectedQr) || selectedQr == AllSentinel;
@@ -245,6 +435,44 @@ namespace CCS_Traceback
         {
             cboAlias.Items.Clear();
             cboAlias.Items.AddRange(aliases.Cast<object>().ToArray());
+        }
+
+        /// <summary>
+        /// QrStatisticsForm 双击某一行时通过 RowActivated 事件进来。
+        /// 把主窗体 cboQr 切到传入的二维码(联动重铺 alias),再选中指定编号,
+        /// 最后把主窗体顶上来 —— 子窗体不关。
+        /// </summary>
+        public void SelectQrAndAlias(string qr, string alias)
+        {
+            if (_records == null || _records.Count == 0)
+            {
+                MessageBox.Show("请先在主界面点 \"更新数据\" 加载 CSV。",
+                    "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            int qrIdx = cboQr.Items.IndexOf(qr);
+            if (qrIdx < 0)
+            {
+                MessageBox.Show($"二维码 \"{qr}\" 不在当前已加载集合里。",
+                    "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            // 设 cboQr 会触发 cboQr_SelectedIndexChanged 重铺 alias,
+            // 用 _suppressAliasRefresh 短路后我们手动选 alias
+            _suppressAliasRefresh = true;
+            cboQr.SelectedIndex = qrIdx;
+
+            // 联动重铺后的 alias 下拉里可能不包含传入的 alias(理论上都在,但兜个底)
+            if (!string.IsNullOrEmpty(alias) && cboAlias.Items.Contains(alias))
+                cboAlias.SelectedItem = alias;
+
+            _suppressAliasRefresh = false;
+
+            // 主窗体顶上来 —— 子窗体保持打开
+            this.Activate();
+            this.BringToFront();
         }
 
         private void btnQrStatistics_Click(object sender, EventArgs e)
@@ -282,9 +510,46 @@ namespace CCS_Traceback
                 return;
             }
 
+            // 一对一窗口:已经有一个开着(没被关掉)就直接激活它,不再弹新的。
+            // _lastLoaded* 更新过(date/start/end 与当前已开窗口不一致)→ 旧窗口过期,
+            // 关掉旧的、可以重开新的。
+            if (_qrStatsForm != null && !_qrStatsForm.IsDisposed)
+            {
+                bool sameAsLastLoaded =
+                    _lastLoadedDate.HasValue && _lastLoadedStart.HasValue && _lastLoadedEnd.HasValue
+                    && _lastLoadedDate.Value == date
+                    && _lastLoadedStart.Value == startTs
+                    && _lastLoadedEnd.Value == endTs;
+
+                if (sameAsLastLoaded)
+                {
+                    // 同一份数据 + 同一时段 → 激活已有窗口、不弹新窗
+                    _qrStatsForm.Activate();
+                    return;
+                }
+
+                // 数据更新了 → 旧窗口关掉,允许下面开新的
+                _qrStatsForm.FormClosed -= QrStatsForm_FormClosed;
+                _qrStatsForm.Close();
+                _qrStatsForm = null;
+            }
+
             // 按二维码统计窗口:展示全部已载入记录(不做时间过滤,不去重)
+            // 双击其中的行 → 通过 RowActivated 回调把主窗体的 cboQr/cboAlias 选上,并顶上来
             var form = new QrStatisticsForm(startTime, endTime, _records);
+            form.RowActivated += SelectQrAndAlias;
+            form.FormClosed += QrStatsForm_FormClosed;
+            _qrStatsForm = form;
             form.Show();
+        }
+
+        /// <summary>
+        /// 子窗体被关掉时清回 _qrStatsForm 引用,这样下次再点按钮可以开新窗。
+        /// </summary>
+        private void QrStatsForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            if (ReferenceEquals(sender, _qrStatsForm))
+                _qrStatsForm = null;
         }
 
         private void UpdateStatsText(int matchedFiles, int total, int qrCount, int aliasCount, int ngCount)

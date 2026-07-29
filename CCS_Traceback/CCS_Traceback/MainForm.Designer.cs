@@ -30,12 +30,12 @@ namespace CCS_Traceback
         {
             this.splitMain = new System.Windows.Forms.SplitContainer();
             this.dgvNgList = new System.Windows.Forms.DataGridView();
-            this.colNgTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colNgQr = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colNgStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colNgSeq = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colNgScan = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colNgAlias = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colNgType = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colNgTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colNgStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colNgReason = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colNgFileName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colNgPath = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.lblNgList = new System.Windows.Forms.Label();
             this.pnlFilters = new System.Windows.Forms.Panel();
@@ -46,6 +46,7 @@ namespace CCS_Traceback
             this.lblFilterQr = new System.Windows.Forms.Label();
             this.cboQr = new System.Windows.Forms.ComboBox();
             this.btnQrStatistics = new System.Windows.Forms.Button();
+            this.btnScanFiles = new System.Windows.Forms.Button();
             this.btnUpdate = new System.Windows.Forms.Button();
             this.pnlTime = new System.Windows.Forms.Panel();
             this.label1 = new System.Windows.Forms.Label();
@@ -64,6 +65,8 @@ namespace CCS_Traceback
             this.txtImgQr = new System.Windows.Forms.TextBox();
             this.lblImgQr = new System.Windows.Forms.Label();
             this.pnlImageBox = new System.Windows.Forms.Panel();
+            this.txtImageTextPreview = new System.Windows.Forms.TextBox();
+            this.picImagePreview = new System.Windows.Forms.PictureBox();
             this.lblImagePlaceholder = new System.Windows.Forms.Label();
             this.pnlStats = new System.Windows.Forms.Panel();
             this.lblStatsText = new System.Windows.Forms.Label();
@@ -81,6 +84,7 @@ namespace CCS_Traceback
             this.tlpRight.SuspendLayout();
             this.pnlImageInfo.SuspendLayout();
             this.pnlImageBox.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picImagePreview)).BeginInit();
             this.pnlStats.SuspendLayout();
             this.pnlChartPanel.SuspendLayout();
             this.pnlChartBox.SuspendLayout();
@@ -100,6 +104,7 @@ namespace CCS_Traceback
             this.splitMain.Panel1.Controls.Add(this.lblNgList);
             this.splitMain.Panel1.Controls.Add(this.pnlFilters);
             this.splitMain.Panel1.Controls.Add(this.btnQrStatistics);
+            this.splitMain.Panel1.Controls.Add(this.btnScanFiles);
             this.splitMain.Panel1.Controls.Add(this.btnUpdate);
             this.splitMain.Panel1.Controls.Add(this.pnlTime);
             this.splitMain.Panel1.Padding = new System.Windows.Forms.Padding(15, 13, 15, 13);
@@ -121,15 +126,15 @@ namespace CCS_Traceback
             this.dgvNgList.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.dgvNgList.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvNgList.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.colNgTime,
-            this.colNgQr,
-            this.colNgStatus,
             this.colNgSeq,
-            this.colNgScan,
-            this.colNgAlias,
+            this.colNgType,
+            this.colNgTime,
+            this.colNgStatus,
+            this.colNgReason,
+            this.colNgFileName,
             this.colNgPath});
             this.dgvNgList.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgvNgList.Location = new System.Drawing.Point(15, 539);
+            this.dgvNgList.Location = new System.Drawing.Point(15, 589);
             this.dgvNgList.Margin = new System.Windows.Forms.Padding(0);
             this.dgvNgList.MultiSelect = false;
             this.dgvNgList.Name = "dgvNgList";
@@ -138,29 +143,9 @@ namespace CCS_Traceback
             this.dgvNgList.RowHeadersWidth = 62;
             this.dgvNgList.RowTemplate.Height = 24;
             this.dgvNgList.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgvNgList.Size = new System.Drawing.Size(740, 625);
+            this.dgvNgList.Size = new System.Drawing.Size(740, 575);
             this.dgvNgList.TabIndex = 5;
-            // 
-            // colNgTime
-            // 
-            this.colNgTime.HeaderText = "时间";
-            this.colNgTime.MinimumWidth = 8;
-            this.colNgTime.Name = "colNgTime";
-            this.colNgTime.ReadOnly = true;
-            // 
-            // colNgQr
-            // 
-            this.colNgQr.HeaderText = "二维码";
-            this.colNgQr.MinimumWidth = 8;
-            this.colNgQr.Name = "colNgQr";
-            this.colNgQr.ReadOnly = true;
-            // 
-            // colNgStatus
-            // 
-            this.colNgStatus.HeaderText = "判定";
-            this.colNgStatus.MinimumWidth = 8;
-            this.colNgStatus.Name = "colNgStatus";
-            this.colNgStatus.ReadOnly = true;
+            this.dgvNgList.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvNgList_CellDoubleClick);
             // 
             // colNgSeq
             // 
@@ -169,23 +154,44 @@ namespace CCS_Traceback
             this.colNgSeq.Name = "colNgSeq";
             this.colNgSeq.ReadOnly = true;
             // 
-            // colNgScan
+            // colNgType
             // 
-            this.colNgScan.HeaderText = "扫描条号";
-            this.colNgScan.MinimumWidth = 8;
-            this.colNgScan.Name = "colNgScan";
-            this.colNgScan.ReadOnly = true;
+            this.colNgType.HeaderText = "检测类型";
+            this.colNgType.MinimumWidth = 8;
+            this.colNgType.Name = "colNgType";
+            this.colNgType.ReadOnly = true;
             // 
-            // colNgAlias
+            // colNgTime
             // 
-            this.colNgAlias.HeaderText = "编号";
-            this.colNgAlias.MinimumWidth = 8;
-            this.colNgAlias.Name = "colNgAlias";
-            this.colNgAlias.ReadOnly = true;
+            this.colNgTime.HeaderText = "时间";
+            this.colNgTime.MinimumWidth = 8;
+            this.colNgTime.Name = "colNgTime";
+            this.colNgTime.ReadOnly = true;
+            // 
+            // colNgStatus
+            // 
+            this.colNgStatus.HeaderText = "判定";
+            this.colNgStatus.MinimumWidth = 8;
+            this.colNgStatus.Name = "colNgStatus";
+            this.colNgStatus.ReadOnly = true;
+            // 
+            // colNgReason
+            // 
+            this.colNgReason.HeaderText = "原因";
+            this.colNgReason.MinimumWidth = 8;
+            this.colNgReason.Name = "colNgReason";
+            this.colNgReason.ReadOnly = true;
+            // 
+            // colNgFileName
+            // 
+            this.colNgFileName.HeaderText = "文件名";
+            this.colNgFileName.MinimumWidth = 8;
+            this.colNgFileName.Name = "colNgFileName";
+            this.colNgFileName.ReadOnly = true;
             // 
             // colNgPath
             // 
-            this.colNgPath.HeaderText = "图像路径";
+            this.colNgPath.HeaderText = "文件路径";
             this.colNgPath.MinimumWidth = 8;
             this.colNgPath.Name = "colNgPath";
             this.colNgPath.ReadOnly = true;
@@ -195,7 +201,7 @@ namespace CCS_Traceback
             this.lblNgList.AutoSize = true;
             this.lblNgList.Dock = System.Windows.Forms.DockStyle.Top;
             this.lblNgList.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F);
-            this.lblNgList.Location = new System.Drawing.Point(15, 493);
+            this.lblNgList.Location = new System.Drawing.Point(15, 543);
             this.lblNgList.Margin = new System.Windows.Forms.Padding(0, 6, 0, 0);
             this.lblNgList.Name = "lblNgList";
             this.lblNgList.Padding = new System.Windows.Forms.Padding(0, 10, 0, 5);
@@ -212,7 +218,7 @@ namespace CCS_Traceback
             this.pnlFilters.Controls.Add(this.lblFilterQr);
             this.pnlFilters.Controls.Add(this.cboQr);
             this.pnlFilters.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pnlFilters.Location = new System.Drawing.Point(15, 213);
+            this.pnlFilters.Location = new System.Drawing.Point(15, 263);
             this.pnlFilters.Margin = new System.Windows.Forms.Padding(0, 6, 0, 0);
             this.pnlFilters.Name = "pnlFilters";
             this.pnlFilters.Size = new System.Drawing.Size(740, 280);
@@ -292,8 +298,9 @@ namespace CCS_Traceback
             // btnQrStatistics
             // 
             this.btnQrStatistics.Dock = System.Windows.Forms.DockStyle.Top;
+            this.btnQrStatistics.Enabled = false;
             this.btnQrStatistics.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F);
-            this.btnQrStatistics.Location = new System.Drawing.Point(15, 163);
+            this.btnQrStatistics.Location = new System.Drawing.Point(15, 213);
             this.btnQrStatistics.Margin = new System.Windows.Forms.Padding(0, 6, 0, 0);
             this.btnQrStatistics.Name = "btnQrStatistics";
             this.btnQrStatistics.Size = new System.Drawing.Size(740, 50);
@@ -302,9 +309,24 @@ namespace CCS_Traceback
             this.btnQrStatistics.UseVisualStyleBackColor = true;
             this.btnQrStatistics.Click += new System.EventHandler(this.btnQrStatistics_Click);
             // 
+            // btnScanFiles
+            // 
+            this.btnScanFiles.Dock = System.Windows.Forms.DockStyle.Top;
+            this.btnScanFiles.Enabled = false;
+            this.btnScanFiles.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F);
+            this.btnScanFiles.Location = new System.Drawing.Point(15, 163);
+            this.btnScanFiles.Margin = new System.Windows.Forms.Padding(0, 6, 0, 0);
+            this.btnScanFiles.Name = "btnScanFiles";
+            this.btnScanFiles.Size = new System.Drawing.Size(740, 50);
+            this.btnScanFiles.TabIndex = 1;
+            this.btnScanFiles.Text = "扫描文件";
+            this.btnScanFiles.UseVisualStyleBackColor = true;
+            this.btnScanFiles.Click += new System.EventHandler(this.btnScanFiles_Click);
+            // 
             // btnUpdate
             // 
             this.btnUpdate.Dock = System.Windows.Forms.DockStyle.Top;
+            this.btnUpdate.Enabled = false;
             this.btnUpdate.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F);
             this.btnUpdate.Location = new System.Drawing.Point(15, 113);
             this.btnUpdate.Margin = new System.Windows.Forms.Padding(0, 6, 0, 0);
@@ -503,6 +525,8 @@ namespace CCS_Traceback
             // pnlImageBox
             // 
             this.pnlImageBox.BackColor = System.Drawing.Color.Black;
+            this.pnlImageBox.Controls.Add(this.txtImageTextPreview);
+            this.pnlImageBox.Controls.Add(this.picImagePreview);
             this.pnlImageBox.Controls.Add(this.lblImagePlaceholder);
             this.pnlImageBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlImageBox.Location = new System.Drawing.Point(0, 47);
@@ -510,6 +534,32 @@ namespace CCS_Traceback
             this.pnlImageBox.Name = "pnlImageBox";
             this.pnlImageBox.Size = new System.Drawing.Size(1562, 810);
             this.pnlImageBox.TabIndex = 1;
+            // 
+            // txtImageTextPreview
+            // 
+            this.txtImageTextPreview.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.txtImageTextPreview.Font = new System.Drawing.Font("Consolas", 10F);
+            this.txtImageTextPreview.Location = new System.Drawing.Point(0, 0);
+            this.txtImageTextPreview.Multiline = true;
+            this.txtImageTextPreview.Name = "txtImageTextPreview";
+            this.txtImageTextPreview.ReadOnly = true;
+            this.txtImageTextPreview.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.txtImageTextPreview.Size = new System.Drawing.Size(1562, 810);
+            this.txtImageTextPreview.TabIndex = 2;
+            this.txtImageTextPreview.Visible = false;
+            this.txtImageTextPreview.WordWrap = false;
+            // 
+            // picImagePreview
+            // 
+            this.picImagePreview.BackColor = System.Drawing.Color.Black;
+            this.picImagePreview.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.picImagePreview.Location = new System.Drawing.Point(0, 0);
+            this.picImagePreview.Name = "picImagePreview";
+            this.picImagePreview.Size = new System.Drawing.Size(1562, 810);
+            this.picImagePreview.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.picImagePreview.TabIndex = 1;
+            this.picImagePreview.TabStop = false;
+            this.picImagePreview.Visible = false;
             // 
             // lblImagePlaceholder
             // 
@@ -622,6 +672,7 @@ namespace CCS_Traceback
             this.pnlImageInfo.PerformLayout();
             this.pnlImageBox.ResumeLayout(false);
             this.pnlImageBox.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picImagePreview)).EndInit();
             this.pnlStats.ResumeLayout(false);
             this.pnlStats.PerformLayout();
             this.pnlChartPanel.ResumeLayout(false);
@@ -643,6 +694,7 @@ namespace CCS_Traceback
         private System.Windows.Forms.MaskedTextBox mtbEndTime;
         private System.Windows.Forms.Button btnUpdate;
         private System.Windows.Forms.Button btnQrStatistics;
+        private System.Windows.Forms.Button btnScanFiles;
         private System.Windows.Forms.Panel pnlFilters;
         private System.Windows.Forms.Label lblFilterQr;
         private System.Windows.Forms.ComboBox cboQr;
@@ -652,12 +704,12 @@ namespace CCS_Traceback
         private System.Windows.Forms.ComboBox cboDefect;
         private System.Windows.Forms.Label lblNgList;
         private System.Windows.Forms.DataGridView dgvNgList;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colNgTime;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colNgQr;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colNgStatus;
         private System.Windows.Forms.DataGridViewTextBoxColumn colNgSeq;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colNgScan;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colNgAlias;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colNgType;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colNgTime;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colNgStatus;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colNgReason;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colNgFileName;
         private System.Windows.Forms.DataGridViewTextBoxColumn colNgPath;
         private System.Windows.Forms.TableLayoutPanel tlpRight;
         private System.Windows.Forms.Panel pnlImageInfo;
@@ -669,6 +721,8 @@ namespace CCS_Traceback
         private System.Windows.Forms.TextBox txtImgDefect;
         private System.Windows.Forms.Panel pnlImageBox;
         private System.Windows.Forms.Label lblImagePlaceholder;
+        private System.Windows.Forms.PictureBox picImagePreview;
+        private System.Windows.Forms.TextBox txtImageTextPreview;
         private System.Windows.Forms.Panel pnlStats;
         private System.Windows.Forms.Label lblChartTitle;
         private System.Windows.Forms.Panel pnlChartPanel;

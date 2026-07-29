@@ -11,6 +11,12 @@ namespace CCS_Traceback
         private readonly DateTime _end;
         private readonly List<DetectionRecord> _records;
 
+        /// <summary>
+        /// 双击某一行时触发。参数:(qrCode, alias)。
+        /// 主窗体订阅这个事件即可把对应二维码 / 编号选中并把主窗体顶上来。
+        /// </summary>
+        public event Action<string, string> RowActivated;
+
         public QrStatisticsForm(DateTime start, DateTime end, List<DetectionRecord> records)
         {
             InitializeComponent();
@@ -18,6 +24,18 @@ namespace CCS_Traceback
             _end = end;
             _records = records ?? new List<DetectionRecord>();
             this.Load += QrStatisticsForm_Load;
+            this.dgvResults.CellDoubleClick += dgvResults_CellDoubleClick;
+        }
+
+        /// <summary>
+        /// 双击行 → 通知订阅方。_records 的填表顺序和 dgvResults 行索引一一对应,
+        /// 所以可以直接用 e.RowIndex 索引回原始记录。
+        /// </summary>
+        private void dgvResults_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.RowIndex >= _records.Count) return;
+            var r = _records[e.RowIndex];
+            RowActivated?.Invoke(r.QrCode, r.Alias);
         }
 
         private void QrStatisticsForm_Load(object sender, EventArgs e)

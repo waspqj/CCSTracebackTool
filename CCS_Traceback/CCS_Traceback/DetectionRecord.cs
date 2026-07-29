@@ -72,5 +72,29 @@ namespace CCS_Traceback
                 }
             }
         }
+
+        /// <summary>
+        /// 由 FileScanner 从 NGImgSave 路径倒数第二层拿到的 processName,例如 "连接器" / "公pin" / "铝排"。
+        /// CSV 行这个字段为 null。
+        /// </summary>
+        public string ProcessName { get; set; }
+
+        /// <summary>
+        /// 由 FileScanner 从 NG 错图文件名按最后一个 _ 拆得到的错误原因段,
+        /// 例如 "连接器错装_螺母漏装"。① 类(Camera9_{i}_{HHmmss}.jpg) 文件名里没有原因,
+        /// 这种情形由调用方把 processName 写到 FileReason。
+        /// CSV 行这个字段为空。
+        /// </summary>
+        public string FileReason { get; set; }
+
+        /// <summary>
+        /// 文件绝对路径(扫描后填)。CSV 行这个字段为空。
+        /// </summary>
+        public string FilePath { get; set; }
+
+        /// <summary>
+        /// 仅文件名(不含目录),供表格展示。CSV 行这个字段为空。
+        /// </summary>
+        public string FileName { get; set; }
     }
 }

@@ -35,6 +35,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -48,7 +49,8 @@
   <ItemGroup>
     <Compile Include="DetectionRecord.cs" />
     <Compile Include="CsvLogReader.cs" />
-    <Compile Include="Globals.cs" />
+    <Compile Include="ConfigLoader.cs" />
+    <Compile Include="FileScanner.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
