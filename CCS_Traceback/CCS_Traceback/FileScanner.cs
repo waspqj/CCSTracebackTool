@@ -79,28 +79,6 @@ namespace CCS_Traceback
         }
 
         /// <summary>
-        /// 把 QR 字符串清洗成"可作文件名 / 可作目录名"的形态。
-        /// 这里不再用它去对 NGImgSave 路径 —— NGImgSave 现场不洗 QR,目录名容错读取。
-        /// SafeQr 仍保留以备其它路径(若以后再扫其它目录)使用。
-        /// </summary>
-        public static string SafeQr(string qr)
-        {
-            if (string.IsNullOrWhiteSpace(qr)) return "_";
-            var invalid = Path.GetInvalidFileNameChars();
-            var chars = qr.Trim().ToCharArray();
-            for (int i = 0; i < chars.Length; i++)
-            {
-                if (Array.IndexOf(invalid, chars[i]) >= 0
-                    || chars[i] == ' '
-                    || chars[i] == ':')
-                {
-                    chars[i] = '_';
-                }
-            }
-            return new string(chars);
-        }
-
-        /// <summary>
         /// 扫指定产品当天产生的所有 NG 错图文件。
         /// </summary>
         /// <param name="qr">二维码原文</param>

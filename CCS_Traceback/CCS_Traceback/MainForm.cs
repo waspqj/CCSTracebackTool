@@ -811,21 +811,6 @@ namespace CCS_Traceback
                 $"最高:{topName} ({topCount} / {topRate:F1}%)";
         }
 
-        private void cboAlias_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            // 引导不依赖此处联动
-        }
-
-        private void cboDefect_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void pnlFilters_Paint(object sender, PaintEventArgs e)
-        {
-
-        }
-
         /// <summary>
         /// 遍历 _records 里的 NG 行,按 DetectionRecord.DefectTypes 累加每种缺陷出现次数。
         /// 硬编码列表里的类型一定出现在字典里(初值 0),这样启动时柱状图也能完整铺位。

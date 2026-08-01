@@ -70,7 +70,6 @@ namespace CCS_Traceback
             this.lblStatsText = new System.Windows.Forms.Label();
             this.pnlChartPanel = new System.Windows.Forms.Panel();
             this.pnlChartBox = new System.Windows.Forms.Panel();
-            this.lblChartPlaceholder = new System.Windows.Forms.Label();
             this.lblChartTitle = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.splitMain)).BeginInit();
             this.splitMain.Panel1.SuspendLayout();
@@ -210,7 +209,6 @@ namespace CCS_Traceback
             this.pnlFilters.Name = "pnlFilters";
             this.pnlFilters.Size = new System.Drawing.Size(740, 280);
             this.pnlFilters.TabIndex = 3;
-            this.pnlFilters.Paint += new System.Windows.Forms.PaintEventHandler(this.pnlFilters_Paint);
             // 
             // lblFilterDefect
             // 
@@ -591,7 +589,7 @@ namespace CCS_Traceback
             this.lblStatsText.Name = "lblStatsText";
             this.lblStatsText.Size = new System.Drawing.Size(304, 286);
             this.lblStatsText.TabIndex = 2;
-            this.lblStatsText.Text = "时间范围:\r\n找到 __ 个CSV文件\r\n共 __ 行，NG  __ 行";
+            this.lblStatsText.Text = "";
             // 
             // pnlChartPanel
             // 
@@ -609,7 +607,6 @@ namespace CCS_Traceback
             // pnlChartBox
             // 
             this.pnlChartBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.pnlChartBox.Controls.Add(this.lblChartPlaceholder);
             this.pnlChartBox.Location = new System.Drawing.Point(0, 0);
             this.pnlChartBox.Margin = new System.Windows.Forms.Padding(0);
             this.pnlChartBox.Name = "pnlChartBox";
@@ -617,19 +614,7 @@ namespace CCS_Traceback
             this.pnlChartBox.TabIndex = 0;
             this.pnlChartBox.Paint += new System.Windows.Forms.PaintEventHandler(this.pnlChartBox_Paint);
             this.pnlChartBox.Resize += new System.EventHandler(this.pnlChartBox_Resize);
-            // 
-            // lblChartPlaceholder
-            // 
-            this.lblChartPlaceholder.AutoSize = true;
-            this.lblChartPlaceholder.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F);
-            this.lblChartPlaceholder.ForeColor = System.Drawing.Color.Gray;
-            this.lblChartPlaceholder.Location = new System.Drawing.Point(180, 84);
-            this.lblChartPlaceholder.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.lblChartPlaceholder.Name = "lblChartPlaceholder";
-            this.lblChartPlaceholder.Size = new System.Drawing.Size(0, 31);
-            this.lblChartPlaceholder.TabIndex = 0;
-            this.lblChartPlaceholder.Visible = false;
-            // 
+            //
             // lblChartTitle
             // 
             this.lblChartTitle.AutoSize = true;
@@ -722,7 +707,6 @@ namespace CCS_Traceback
         private System.Windows.Forms.Label lblChartTitle;
         private System.Windows.Forms.Panel pnlChartPanel;
         private System.Windows.Forms.Panel pnlChartBox;
-        private System.Windows.Forms.Label lblChartPlaceholder;
         private System.Windows.Forms.Label lblStatsText;
         private System.Windows.Forms.Label label1;
     }

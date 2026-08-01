@@ -96,7 +96,6 @@ namespace CCS_Traceback
             var rows = ParseCsv(text);
             if (rows.Count == 0) return list;
 
-            int seq = 0;
             for (int r = 1; r < rows.Count; r++)
             {
                 var row = rows[r];
@@ -113,107 +112,14 @@ namespace CCS_Traceback
                 if (t < startTime) continue;   // 还没到开始时间
                 if (t > endTime) break;        // 已过结束时间,后续也不再进来(递增)
 
-                seq++;
                 var rec = new DetectionRecord
                 {
-                    Seq = seq,
                     Alias = SafeGet(row, 0),
                     QrCode = SafeGet(row, 1),
                     ResultRaw = SafeGet(row, 2),
-                    Result2Raw = SafeGet(row, 3),
                     Reason = SafeGet(row, 4),
                     Time = t,
-                    MesReturn1 = SafeGet(row, 6),
-                    MesReturn2 = SafeGet(row, 7),
                 };
-                list.Add(rec);
-            }
-
-            return list;
-        }
-
-        /// <summary>
-        /// 读根目录下(含子目录)的所有 *.csv,返回全部记录。
-        /// 单个文件解析失败时跳过并继续,不会让整个调用崩。
-        /// </summary>
-        public List<DetectionRecord> ReadAll(string rootDir)
-        {
-            var all = new List<DetectionRecord>();
-            if (string.IsNullOrWhiteSpace(rootDir) || !Directory.Exists(rootDir))
-                return all;
-
-            string[] files;
-            try
-            {
-                files = Directory.GetFiles(rootDir, "*.csv", SearchOption.AllDirectories);
-            }
-            catch
-            {
-                return all;
-            }
-
-            foreach (var file in files)
-            {
-                List<DetectionRecord> part;
-                try
-                {
-                    part = ReadFile(file);
-                }
-                catch
-                {
-                    // 单文件失败不影响其它文件
-                    continue;
-                }
-                all.AddRange(part);
-            }
-
-            return all;
-        }
-
-        /// <summary>
-        /// 读单个 CSV。文件没有表头或表头列不足 6 时整体跳过。
-        /// </summary>
-        public List<DetectionRecord> ReadFile(string path)
-        {
-            var list = new List<DetectionRecord>();
-
-            byte[] raw = File.ReadAllBytes(path);
-            int offset = 0;
-            if (raw.Length >= 3 && raw[0] == 0xEF && raw[1] == 0xBB && raw[2] == 0xBF)
-                offset = 3;
-            string text = Encoding.UTF8.GetString(raw, offset, raw.Length - offset);
-
-            var rows = ParseCsv(text);
-            if (rows.Count == 0) return list;
-
-            // 第 0 行视作表头 —— 不强校验列名,直接跳过
-            int seq = 0;
-            for (int r = 1; r < rows.Count; r++)
-            {
-                var row = rows[r];
-                if (row.Count < 6) continue;
-
-                seq++;
-                var rec = new DetectionRecord
-                {
-                    Seq = seq,
-                    Alias = SafeGet(row, 0),
-                    QrCode = SafeGet(row, 1),
-                    ResultRaw = SafeGet(row, 2),
-                    Result2Raw = SafeGet(row, 3),
-                    Reason = SafeGet(row, 4),
-                    MesReturn1 = SafeGet(row, 6),
-                    MesReturn2 = SafeGet(row, 7),
-                };
-
-                string ts = SafeGet(row, 5);
-                if (!string.IsNullOrWhiteSpace(ts) &&
-                    DateTime.TryParseExact(ts.Trim(), TimeFormats,
-                        CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime t))
-                {
-                    rec.Time = t;
-                }
-
                 list.Add(rec);
             }
 

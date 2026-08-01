@@ -15,15 +15,6 @@ namespace CCS_Traceback
     public static class ConfigLoader
     {
         /// <summary>
-        /// 加载并取出 PathMesLog。失败抛 ConfigLoadException(message, inner)。
-        /// </summary>
-        public static string LoadPathMesLog(string jsonPath)
-        {
-            var dto = Load(jsonPath);
-            return dto.PathMesLog;
-        }
-
-        /// <summary>
         /// 加载整个 DTO。失败抛 ConfigLoadException。
         /// 只校验两个必填字段(PathMesLog / NGImgSave)。
         /// </summary>

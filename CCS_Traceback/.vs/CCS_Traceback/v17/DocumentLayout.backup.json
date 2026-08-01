@@ -3,34 +3,16 @@
   "WorkspaceRootPath": "D:\\\u7EDF\u8BA1\u5DE5\u5177\uFF0C\u91D1\u6837\u70B9\u68C0\u7ED3\u679C\u6BD4\u8F83_7_21\\CCS_Traceback_Tool\\ccstraceback-tool\\CCS_Traceback\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{00A42D9A-6D2F-45F8-92E6-5C16122CB258}|CCS_Traceback\\CCS_Traceback.csproj|d:\\\u7EDF\u8BA1\u5DE5\u5177\uFF0C\u91D1\u6837\u70B9\u68C0\u7ED3\u679C\u6BD4\u8F83_7_21\\ccs_traceback_tool\\ccstraceback-tool\\ccs_traceback\\ccs_traceback\\csvlogreader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{00A42D9A-6D2F-45F8-92E6-5C16122CB258}|CCS_Traceback\\CCS_Traceback.csproj|solutionrelative:ccs_traceback\\csvlogreader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00A42D9A-6D2F-45F8-92E6-5C16122CB258}|CCS_Traceback\\CCS_Traceback.csproj|d:\\\u7EDF\u8BA1\u5DE5\u5177\uFF0C\u91D1\u6837\u70B9\u68C0\u7ED3\u679C\u6BD4\u8F83_7_21\\ccs_traceback_tool\\ccstraceback-tool\\ccs_traceback\\ccs_traceback\\detectionrecord.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{00A42D9A-6D2F-45F8-92E6-5C16122CB258}|CCS_Traceback\\CCS_Traceback.csproj|solutionrelative:ccs_traceback\\detectionrecord.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{00A42D9A-6D2F-45F8-92E6-5C16122CB258}|CCS_Traceback\\CCS_Traceback.csproj|D:\\\u7EDF\u8BA1\u5DE5\u5177\uFF0C\u91D1\u6837\u70B9\u68C0\u7ED3\u679C\u6BD4\u8F83_7_21\\CCS_Traceback_Tool\\ccstraceback-tool\\CCS_Traceback\\ccs_traceback\\mainform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{00A42D9A-6D2F-45F8-92E6-5C16122CB258}|CCS_Traceback\\CCS_Traceback.csproj|solutionrelative:ccs_traceback\\mainform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{00A42D9A-6D2F-45F8-92E6-5C16122CB258}|CCS_Traceback\\CCS_Traceback.csproj|D:\\\u7EDF\u8BA1\u5DE5\u5177\uFF0C\u91D1\u6837\u70B9\u68C0\u7ED3\u679C\u6BD4\u8F83_7_21\\CCS_Traceback_Tool\\ccstraceback-tool\\CCS_Traceback\\ccs_traceback\\qrstatisticsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{00A42D9A-6D2F-45F8-92E6-5C16122CB258}|CCS_Traceback\\CCS_Traceback.csproj|solutionrelative:ccs_traceback\\qrstatisticsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{00A42D9A-6D2F-45F8-92E6-5C16122CB258}|CCS_Traceback\\CCS_Traceback.csproj|D:\\\u7EDF\u8BA1\u5DE5\u5177\uFF0C\u91D1\u6837\u70B9\u68C0\u7ED3\u679C\u6BD4\u8F83_7_21\\CCS_Traceback_Tool\\ccstraceback-tool\\CCS_Traceback\\ccs_traceback\\mainform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
-      "RelativeMoniker": "D:0:0:{00A42D9A-6D2F-45F8-92E6-5C16122CB258}|CCS_Traceback\\CCS_Traceback.csproj|solutionrelative:ccs_traceback\\mainform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\\u7EDF\u8BA1\u5DE5\u5177\uFF0C\u91D1\u6837\u70B9\u68C0\u7ED3\u679C\u6BD4\u8F83_7_21\\CCS_Traceback_Tool\\ccstraceback-tool\\README.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\ZS\\CCS-AOI\\ccsaoi2026dgonline\\bin\\Release\\ApplicationSetting.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{00A42D9A-6D2F-45F8-92E6-5C16122CB258}|CCS_Traceback\\CCS_Traceback.csproj|D:\\\u7EDF\u8BA1\u5DE5\u5177\uFF0C\u91D1\u6837\u70B9\u68C0\u7ED3\u679C\u6BD4\u8F83_7_21\\CCS_Traceback_Tool\\ccstraceback-tool\\CCS_Traceback\\ccs_traceback\\qrstatisticsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
-      "RelativeMoniker": "D:0:0:{00A42D9A-6D2F-45F8-92E6-5C16122CB258}|CCS_Traceback\\CCS_Traceback.csproj|solutionrelative:ccs_traceback\\qrstatisticsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{00A42D9A-6D2F-45F8-92E6-5C16122CB258}|CCS_Traceback\\CCS_Traceback.csproj|D:\\\u7EDF\u8BA1\u5DE5\u5177\uFF0C\u91D1\u6837\u70B9\u68C0\u7ED3\u679C\u6BD4\u8F83_7_21\\CCS_Traceback_Tool\\ccstraceback-tool\\CCS_Traceback\\ccs_traceback\\mainform.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{00A42D9A-6D2F-45F8-92E6-5C16122CB258}|CCS_Traceback\\CCS_Traceback.csproj|solutionrelative:ccs_traceback\\mainform.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{00A42D9A-6D2F-45F8-92E6-5C16122CB258}|CCS_Traceback\\CCS_Traceback.csproj|D:\\\u7EDF\u8BA1\u5DE5\u5177\uFF0C\u91D1\u6837\u70B9\u68C0\u7ED3\u679C\u6BD4\u8F83_7_21\\CCS_Traceback_Tool\\ccstraceback-tool\\CCS_Traceback\\ccs_traceback\\detectionrecord.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{00A42D9A-6D2F-45F8-92E6-5C16122CB258}|CCS_Traceback\\CCS_Traceback.csproj|solutionrelative:ccs_traceback\\detectionrecord.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -40,104 +22,43 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 7,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "ApplicationSetting.json",
-              "DocumentMoniker": "D:\\ZS\\CCS-AOI\\ccsaoi2026dgonline\\bin\\Release\\ApplicationSetting.json",
-              "RelativeDocumentMoniker": "..\\..\\..\\..\\ZS\\CCS-AOI\\ccsaoi2026dgonline\\bin\\Release\\ApplicationSetting.json",
-              "ToolTip": "D:\\ZS\\CCS-AOI\\ccsaoi2026dgonline\\bin\\Release\\ApplicationSetting.json",
-              "RelativeToolTip": "..\\..\\..\\..\\ZS\\CCS-AOI\\ccsaoi2026dgonline\\bin\\Release\\ApplicationSetting.json",
-              "ViewState": "AgIAAB4AAAAAAAAAAADwvycAAAAVAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-07-31T02:51:26.042Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "README.md",
-              "DocumentMoniker": "D:\\\u7EDF\u8BA1\u5DE5\u5177\uFF0C\u91D1\u6837\u70B9\u68C0\u7ED3\u679C\u6BD4\u8F83_7_21\\CCS_Traceback_Tool\\ccstraceback-tool\\README.md",
-              "RelativeDocumentMoniker": "..\\README.md",
-              "ToolTip": "D:\\\u7EDF\u8BA1\u5DE5\u5177\uFF0C\u91D1\u6837\u70B9\u68C0\u7ED3\u679C\u6BD4\u8F83_7_21\\CCS_Traceback_Tool\\ccstraceback-tool\\README.md",
-              "RelativeToolTip": "..\\README.md",
-              "ViewState": "AgIAAAkAAAAAAAAAAAAAACQAAAAMAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
-              "WhenOpened": "2026-07-29T06:30:32.757Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "MainForm.cs [\u8BBE\u8BA1]",
-              "DocumentMoniker": "D:\\\u7EDF\u8BA1\u5DE5\u5177\uFF0C\u91D1\u6837\u70B9\u68C0\u7ED3\u679C\u6BD4\u8F83_7_21\\CCS_Traceback_Tool\\ccstraceback-tool\\CCS_Traceback\\CCS_Traceback\\MainForm.cs",
-              "RelativeDocumentMoniker": "CCS_Traceback\\MainForm.cs",
-              "ToolTip": "D:\\\u7EDF\u8BA1\u5DE5\u5177\uFF0C\u91D1\u6837\u70B9\u68C0\u7ED3\u679C\u6BD4\u8F83_7_21\\CCS_Traceback_Tool\\ccstraceback-tool\\CCS_Traceback\\CCS_Traceback\\MainForm.cs [\u8BBE\u8BA1]",
-              "RelativeToolTip": "CCS_Traceback\\MainForm.cs [\u8BBE\u8BA1]",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-22T12:38:08.482Z",
-              "EditorCaption": " [\u8BBE\u8BA1]"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "QrStatisticsForm.cs [\u8BBE\u8BA1]",
-              "DocumentMoniker": "D:\\\u7EDF\u8BA1\u5DE5\u5177\uFF0C\u91D1\u6837\u70B9\u68C0\u7ED3\u679C\u6BD4\u8F83_7_21\\CCS_Traceback_Tool\\ccstraceback-tool\\CCS_Traceback\\CCS_Traceback\\QrStatisticsForm.cs",
-              "RelativeDocumentMoniker": "CCS_Traceback\\QrStatisticsForm.cs",
-              "ToolTip": "D:\\\u7EDF\u8BA1\u5DE5\u5177\uFF0C\u91D1\u6837\u70B9\u68C0\u7ED3\u679C\u6BD4\u8F83_7_21\\CCS_Traceback_Tool\\ccstraceback-tool\\CCS_Traceback\\CCS_Traceback\\QrStatisticsForm.cs [\u8BBE\u8BA1]",
-              "RelativeToolTip": "CCS_Traceback\\QrStatisticsForm.cs [\u8BBE\u8BA1]",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-22T12:52:39.822Z",
-              "EditorCaption": " [\u8BBE\u8BA1]"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "MainForm.Designer.cs",
-              "DocumentMoniker": "D:\\\u7EDF\u8BA1\u5DE5\u5177\uFF0C\u91D1\u6837\u70B9\u68C0\u7ED3\u679C\u6BD4\u8F83_7_21\\CCS_Traceback_Tool\\ccstraceback-tool\\CCS_Traceback\\CCS_Traceback\\MainForm.Designer.cs",
-              "RelativeDocumentMoniker": "CCS_Traceback\\MainForm.Designer.cs",
-              "ToolTip": "D:\\\u7EDF\u8BA1\u5DE5\u5177\uFF0C\u91D1\u6837\u70B9\u68C0\u7ED3\u679C\u6BD4\u8F83_7_21\\CCS_Traceback_Tool\\ccstraceback-tool\\CCS_Traceback\\CCS_Traceback\\MainForm.Designer.cs",
-              "RelativeToolTip": "CCS_Traceback\\MainForm.Designer.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAyAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-22T12:48:57.85Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "QrStatisticsForm.cs",
-              "DocumentMoniker": "D:\\\u7EDF\u8BA1\u5DE5\u5177\uFF0C\u91D1\u6837\u70B9\u68C0\u7ED3\u679C\u6BD4\u8F83_7_21\\CCS_Traceback_Tool\\ccstraceback-tool\\CCS_Traceback\\CCS_Traceback\\QrStatisticsForm.cs",
-              "RelativeDocumentMoniker": "CCS_Traceback\\QrStatisticsForm.cs",
-              "ToolTip": "D:\\\u7EDF\u8BA1\u5DE5\u5177\uFF0C\u91D1\u6837\u70B9\u68C0\u7ED3\u679C\u6BD4\u8F83_7_21\\CCS_Traceback_Tool\\ccstraceback-tool\\CCS_Traceback\\CCS_Traceback\\QrStatisticsForm.cs",
-              "RelativeToolTip": "CCS_Traceback\\QrStatisticsForm.cs",
-              "ViewState": "AgIAACIAAAAAAAAAAAAAwDsAAAARAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-22T12:48:52.792Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 7,
               "Title": "DetectionRecord.cs",
               "DocumentMoniker": "D:\\\u7EDF\u8BA1\u5DE5\u5177\uFF0C\u91D1\u6837\u70B9\u68C0\u7ED3\u679C\u6BD4\u8F83_7_21\\CCS_Traceback_Tool\\ccstraceback-tool\\CCS_Traceback\\CCS_Traceback\\DetectionRecord.cs",
               "RelativeDocumentMoniker": "CCS_Traceback\\DetectionRecord.cs",
               "ToolTip": "D:\\\u7EDF\u8BA1\u5DE5\u5177\uFF0C\u91D1\u6837\u70B9\u68C0\u7ED3\u679C\u6BD4\u8F83_7_21\\CCS_Traceback_Tool\\ccstraceback-tool\\CCS_Traceback\\CCS_Traceback\\DetectionRecord.cs",
               "RelativeToolTip": "CCS_Traceback\\DetectionRecord.cs",
-              "ViewState": "AgIAADcAAAAAAAAAAAAswEAAAAA2AAAAAAAAAA==",
+              "ViewState": "AgIAABcAAAAAAAAAAAAcwAwAAAApAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-22T12:19:43.949Z"
+              "WhenOpened": "2026-08-01T08:46:44.685Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "CsvLogReader.cs",
+              "DocumentMoniker": "D:\\\u7EDF\u8BA1\u5DE5\u5177\uFF0C\u91D1\u6837\u70B9\u68C0\u7ED3\u679C\u6BD4\u8F83_7_21\\CCS_Traceback_Tool\\ccstraceback-tool\\CCS_Traceback\\CCS_Traceback\\CsvLogReader.cs",
+              "RelativeDocumentMoniker": "CCS_Traceback\\CsvLogReader.cs",
+              "ToolTip": "D:\\\u7EDF\u8BA1\u5DE5\u5177\uFF0C\u91D1\u6837\u70B9\u68C0\u7ED3\u679C\u6BD4\u8F83_7_21\\CCS_Traceback_Tool\\ccstraceback-tool\\CCS_Traceback\\CCS_Traceback\\CsvLogReader.cs",
+              "RelativeToolTip": "CCS_Traceback\\CsvLogReader.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAADwvwkAAAAcAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-01T08:46:25.285Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
               "Title": "MainForm.cs",
               "DocumentMoniker": "D:\\\u7EDF\u8BA1\u5DE5\u5177\uFF0C\u91D1\u6837\u70B9\u68C0\u7ED3\u679C\u6BD4\u8F83_7_21\\CCS_Traceback_Tool\\ccstraceback-tool\\CCS_Traceback\\CCS_Traceback\\MainForm.cs",
               "RelativeDocumentMoniker": "CCS_Traceback\\MainForm.cs",
               "ToolTip": "D:\\\u7EDF\u8BA1\u5DE5\u5177\uFF0C\u91D1\u6837\u70B9\u68C0\u7ED3\u679C\u6BD4\u8F83_7_21\\CCS_Traceback_Tool\\ccstraceback-tool\\CCS_Traceback\\CCS_Traceback\\MainForm.cs",
               "RelativeToolTip": "CCS_Traceback\\MainForm.cs",
-              "ViewState": "AgIAAIMBAAAAAAAAAAAqwJoBAAAVAAAAAAAAAA==",
+              "ViewState": "AgIAAMAAAAAAAAAAAAAowMgAAAA6AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-07-22T05:17:57.9Z",
               "EditorCaption": ""

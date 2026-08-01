@@ -51,7 +51,6 @@
     <Compile Include="CsvLogReader.cs" />
     <Compile Include="ConfigLoader.cs" />
     <Compile Include="FileScanner.cs" />
-    <Compile Include="GuideStep.cs" />
     <Compile Include="GuideHighlighter.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
