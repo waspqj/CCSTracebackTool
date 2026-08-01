@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -36,10 +37,20 @@ namespace CCS_Traceback
         // 关掉后通过 FormClosed 事件清回 null。
         private QrStatisticsForm _qrStatsForm;
 
+        // 上次开窗时喂给 QrStatisticsForm 的 _records 引用。
+        // 即使 date/start/end 三元组没变,只要用户重新"更新数据"导致
+        // _records 被替换成新 List,旧窗口里的数据就过期了 —— 此时必须关旧开新。
+        private object _lastShownRecordsRef;
+
         // ApplicationSetting.json 反序列化出来的完整 DTO。
         // 启动时 MainForm_Load 从 exe 同目录加载,失败则为 null。
         // btnUpdate 用 PathMesLog,btnScanFiles 用 NGImgSave。
         private ApplicationSettingDto _appConfig;
+
+        // 引导式高亮管理器:跟踪 9 步状态机,在目标控件四周画脉动边框。
+        // 由 MainForm_Load 初始化,各推进点(btnUpdate / btnQrStatistics / dgvNgList_CellDoubleClick 等)
+        // 调用 _guide.GoTo(step) 切换;双击 NG 行后自动循环回 PickDate。
+        private GuideHighlighter _guide;
 
         // 柱状图配色(循环使用)
         private static readonly Color[] ChartColors =
@@ -120,6 +131,35 @@ namespace CCS_Traceback
 
             // 启动时柱状图就铺满所有硬编码缺陷类型(均为 0)
             BuildDefectCounts();
+
+            // 启动引导式高亮:从第 1 步"选日期"开始。
+            _guide = new GuideHighlighter(this);
+            _guide.StepChanged += OnGuideStepChanged;
+            _guide.Start();
+
+            // 引导推进埋点
+            dtpDate.ValueChanged += DtpDate_ValueChanged;
+            dgvNgList.CellDoubleClick += DgvNgList_CellDoubleClickForGuide;
+        }
+
+        private void DtpDate_ValueChanged(object sender, EventArgs e)
+        {
+            // 用户改了日期 → 强制跳到"点更新数据",无论当前在哪一步
+            // (日期 = 整个流程的"重置"信号,改了就要从更新数据重新开始)
+            if (_guide != null)
+                _guide.GoTo(GuideStep.ClickUpdate);
+        }
+
+        private void DgvNgList_CellDoubleClickForGuide(object sender, DataGridViewCellEventArgs e)
+        {
+            // 第 9 步触发条件:用户双击 NG 行 → 循环回第 1 步"选日期"
+            if (_guide != null && _guide.CurrentStep == GuideStep.DoubleClickNg && e.RowIndex >= 0)
+                _guide.GoTo(GuideStep.PickDate);
+        }
+
+        private void OnGuideStepChanged(GuideStep step, Control target)
+        {
+            // 步骤变更回调(目前不更新任何 UI 文案,留作扩展用 —— 比如 lblGuideStep 提示)
         }
 
         /// <summary>
@@ -129,15 +169,19 @@ namespace CCS_Traceback
         private void ShowEmptyNgList(string tip = "请先选二维码+编号再点 \"扫描文件\"")
         {
             dgvNgList.Rows.Clear();
+            // 同步清空右侧"图像信息区"
+            txtImgQr.Text = "";
+            txtImgAlias.Text = "";
+            txtImgDefect.Text = "";
+            txtImgTime.Text = "";
+
             var row = new DataGridViewRow();
             row.CreateCells(dgvNgList);
             row.Cells[0].Value = "—";
             row.Cells[1].Value = "—";
             row.Cells[2].Value = "—";
-            row.Cells[3].Value = "—";
-            row.Cells[4].Value = tip;
-            row.Cells[5].Value = "";
-            row.Cells[6].Value = "";
+            row.Cells[3].Value = tip;
+            row.Cells[4].Value = "";
             dgvNgList.Rows.Add(row);
         }
 
@@ -203,11 +247,10 @@ namespace CCS_Traceback
                               .Distinct()
                               .OrderBy(s => s)
                               .ToList();
-            // 编号:去重 + 排序(整体去重,联动后会被过滤)
+            // 编号:只去重,不排序 —— CSV 来的顺序就是想要的顺序(编号大小)
             var aliases = _records.Select(r => r.Alias)
                                   .Where(s => !string.IsNullOrWhiteSpace(s))
                                   .Distinct()
-                                  .OrderBy(s => s)
                                   .ToList();
 
             cboQr.Items.Clear();
@@ -229,10 +272,23 @@ namespace CCS_Traceback
             // 刷新缺陷类型柱状图
             BuildDefectCounts();
 
+            // 引导第 3 步:MessageBox.Show 弹出 → 调度高亮 OK 按钮 → 等用户点 OK → 进 4
+            if (_records.Count > 0)
+            {
+                _guide.GoTo(GuideStep.ConfirmUpdateMsg);
+                _guide.HighlightMessageBoxOk("更新数据");
+            }
+
             MessageBox.Show(
                 $"日期 {date:yyyy-MM-dd} 匹配 {matchedFiles} 个 CSV。\n" +
                 $"时段 {startTs:hh\\:mm} ~ {endTs:hh\\:mm} 内载入 {_records.Count} 条记录。",
                 "更新数据", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            if (_records.Count > 0)
+            {
+                // 用户已点 OK,引导推进到第 4 步"按二维码统计"
+                _guide.GoTo(GuideStep.ClickQrStatistics);
+            }
 
             // 缓存本次成功加载的日期 + 时段,用于重复点击守卫
             _lastLoadedDate = date;
@@ -242,7 +298,15 @@ namespace CCS_Traceback
 
         /// <summary>
         /// 扫描按钮:基于当前选中的 cboQr + cboAlias + dtpDate,扫 _appConfig.NGImgSave
-        /// 下的所有 NG 错图,结果喂给 dgvNgList。
+        /// 下的 NG 错图,用已加载的 CSV 当 alias 过滤 + 时间锚,结果喂给 dgvNgList。
+        ///
+        /// 关键规则:
+        ///   1. 必须先点 "更新数据" 加载 CSV(_records),alias 过滤依赖 CSV 的时间戳。
+        ///   2. 取该 QR + alias + 当天的所有 CSV 检测行(按 Time 升序)。
+        ///   3. 每张 NG 图必须 Time 严格早于某 CSV 行,且差 ≤ 10 分钟,才算这次检测的。
+        ///   4. 同 processName 内,相邻图差 > 1 分钟 → 切新段,段内序号从 1 重起。
+        ///   5. 全局 "序号" 列每次切到新 CSV 行就重置回 1。
+        ///   6. CSV 行没匹配到任何 NG → 占位行 "没有找到NG情况"。
         /// </summary>
         private void btnScanFiles_Click(object sender, EventArgs e)
         {
@@ -268,42 +332,143 @@ namespace CCS_Traceback
                 return;
             }
 
-            DateTime date = dtpDate.Value.Date;
-            var files = FileScanner.Scan(qr, alias, date, _appConfig.NGImgSave);
-
-            // 喂给 dgvNgList —— 只列 NG
-            dgvNgList.Rows.Clear();
-            if (files.Count == 0)
+            // CSV 必须先加载 —— alias 过滤 + 时间锚都靠它
+            if (_records == null || _records.Count == 0)
             {
-                ShowEmptyNgList("(该产品当天没有 NG 错图)");
+                MessageBox.Show("请先点击 \"更新数据\" 加载 CSV,再用编号过滤扫描 NG 错图。",
+                    "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
-            // 每种 processName 内从 1 起累加 + 全局从 1 起累加
-            var typeCounters = new Dictionary<string, int>();
-            int globalSeq = 0;
-            foreach (var r in files)
-            {
-                string typeKey = NgTypeKey(r);
-                typeCounters.TryGetValue(typeKey, out int typeSeq);
-                typeSeq++;
-                typeCounters[typeKey] = typeSeq;
-                globalSeq++;
+            DateTime date = dtpDate.Value.Date;
 
-                // 列顺序:序号 / 检测类型 / 时间 / 判定 / 原因 / 文件名 / 路径
-                dgvNgList.Rows.Add(
-                    globalSeq.ToString(),
-                    $"{typeKey}_{typeSeq}",
-                    r.Time.ToString("HH:mm:ss.fff"),
-                    r.IsNg ? "NG" : "OK",
-                    r.FileReason ?? "",
-                    r.FileName ?? "",
-                    r.FilePath ?? "");
-                // NG 错图全行高亮
-                int idx = dgvNgList.Rows.Count - 1;
-                dgvNgList.Rows[idx].DefaultCellStyle.BackColor = Color.MistyRose;
-                dgvNgList.Rows[idx].DefaultCellStyle.Font =
-                    new Font(dgvNgList.Font, FontStyle.Bold);
+            // Step 1:挑出本次相关的 CSV 检测行(QR + alias + 当天,按 Time 升序)
+            var csvRows = _records
+                .Where(r => r.QrCode == qr
+                         && r.Alias == alias
+                         && r.Time != default
+                         && r.Time.Date == date)
+                .OrderBy(r => r.Time)
+                .ToList();
+
+            dgvNgList.Rows.Clear();
+            if (csvRows.Count == 0)
+            {
+                ShowEmptyNgList("(" + qr + " / " + alias + " 当天无 CSV 检测记录)");
+                return;
+            }
+
+            // Step 2:扫 NGImgSave 拿该 QR 当天所有 processName 下的 NG 图
+            // alias 在文件系统层面没法过滤,靠后面 10 分钟时间窗反向归属
+            var allNgFiles = FileScanner.Scan(qr, alias, date, _appConfig.NGImgSave);
+            if (allNgFiles.Count == 0)
+            {
+                ShowEmptyNgList("(该二维码当天没有任何 NG 错图)");
+                // 引导停在第 8 步"扫描文件",等用户重试
+                return;
+            }
+
+            // 扫描成功 → 引导推进到第 9 步"双击 NG 行"
+            if (_guide != null && _guide.CurrentStep == GuideStep.ClickScan)
+                _guide.GoTo(GuideStep.DoubleClickNg);
+
+            // 时间常量
+            const int SEG_GAP_SECONDS = 30;        // 同 processName 内,相邻 NG > 30 秒切新段
+            const int MAX_BEFORE_MINUTES = 10;     // 离 CSV 早于 10 分钟以上的 NG 视为非本次
+
+            // Step 3:逐 CSV 行匹配 NG + 切段 + 渲染
+            foreach (var csvRow in csvRows)
+            {
+                // 本次检测的 NG:严格早于 CSV.Time,且差 ≤ 10 分钟
+                // (NewFileRecord 里若文件名解析失败,Time 会落到当天 00:00:00 —— 这种自然会被 10 分钟阈值筛掉)
+                var matched = allNgFiles
+                    .Where(f => f.Time < csvRow.Time
+                             && (csvRow.Time - f.Time).TotalMinutes <= MAX_BEFORE_MINUTES)
+                    .ToList();
+
+                if (matched.Count == 0)
+                {
+                    // 占位行 —— 表示这次检测跑完但没出 NG
+                    // 文件路径填上 scanner 实际扫描的 dayDir(按 A/B 派兼容规则取) + QR,
+                    // 方便用户对照排查为什么这次没出 NG。
+                    string dayDir = FileScanner.TryFindDayDir(_appConfig.NGImgSave, csvRow.Time);
+                    string expectedDir = dayDir != null
+                        ? Path.Combine(dayDir, qr)
+                        : Path.Combine(_appConfig.NGImgSave,
+                                       csvRow.Time.ToString("yyyy-MM"),
+                                       csvRow.Time.ToString("yyyy-MM-dd"),
+                                       qr);
+
+                    dgvNgList.Rows.Add(
+                        "",                       // 序号(空,不参与全局计数)
+                        "(无 NG)",                // 检测类型
+                        csvRow.Time.ToString("HH:mm:ss"),
+                        "本次检测没有找到NG错图",
+                        expectedDir);             // 文件路径:期望的目录(可能不存在)
+                    int phIdx = dgvNgList.Rows.Count - 1;
+                    dgvNgList.Rows[phIdx].Tag = csvRow;   // 双击时反查 QR/Alias/时间
+                    dgvNgList.Rows[phIdx].DefaultCellStyle.BackColor = Color.LightYellow;
+                    dgvNgList.Rows[phIdx].DefaultCellStyle.Font =
+                        new Font(dgvNgList.Font, FontStyle.Italic);
+                    continue;
+                }
+
+                // 同 processName 内按时间排序,30 秒阈值切段;
+                // 但每台相机只保留"最靠后、且早于 csvRow.Time"的那一段(其他段归不到本次检测)。
+                var segments = new List<(string ProcName, int SegN, DateTime Time, DetectionRecord Rec)>();
+                foreach (var procGroup in matched.GroupBy(f => NgTypeKey(f)))
+                {
+                    var sorted = procGroup.OrderBy(f => f.Time).ToList();
+
+                    // 第一步:30 秒切段
+                    var cutSegs = new List<List<DetectionRecord>>();
+                    var cur = new List<DetectionRecord>();
+                    DateTime? lastTime = null;
+                    foreach (var f in sorted)
+                    {
+                        if (lastTime.HasValue
+                            && (f.Time - lastTime.Value).TotalSeconds > SEG_GAP_SECONDS)
+                        {
+                            if (cur.Count > 0) cutSegs.Add(cur);
+                            cur = new List<DetectionRecord>();
+                        }
+                        cur.Add(f);
+                        lastTime = f.Time;
+                    }
+                    if (cur.Count > 0) cutSegs.Add(cur);
+
+                    // 第二步:挑"段末时间最靠 csvRow.Time 的前一段"(其它段归不到这次检测)
+                    var closestSeg = cutSegs
+                        .OrderByDescending(s => s.Max(x => x.Time))
+                        .FirstOrDefault();
+                    if (closestSeg == null) continue;
+
+                    // 段内从 1 起编号
+                    int segN = 0;
+                    foreach (var f in closestSeg.OrderBy(f => f.Time))
+                    {
+                        segN++;
+                        segments.Add((procGroup.Key, segN, f.Time, f));
+                    }
+                }
+
+                // 全局序号:每次切到新 CSV 行就重置回 1
+                int csvRowSeq = 0;
+                foreach (var seg in segments.OrderBy(s => s.Time))
+                {
+                    csvRowSeq++;
+                    dgvNgList.Rows.Add(
+                        csvRowSeq.ToString(),
+                        $"{seg.ProcName}_{seg.SegN}",
+                        seg.Time.ToString("HH:mm:ss.fff"),
+                        seg.Rec.FileReason ?? "",
+                        seg.Rec.FilePath ?? "");
+                    int idx = dgvNgList.Rows.Count - 1;
+                    dgvNgList.Rows[idx].Tag = seg.Rec;    // 双击时反查 QR/Alias
+                    dgvNgList.Rows[idx].DefaultCellStyle.BackColor = Color.Lavender;
+                    dgvNgList.Rows[idx].DefaultCellStyle.Font =
+                        new Font(dgvNgList.Font, FontStyle.Bold);
+                }
             }
         }
 
@@ -315,6 +480,11 @@ namespace CCS_Traceback
         {
             if (e.RowIndex < 0) return;
             var row = dgvNgList.Rows[e.RowIndex];
+
+            // 双击先把右侧"图像信息区"四个文本框填上对应值(QR/编号/缺陷类型/时间)
+            // QR/编号 走 row.Tag 里的 DetectionRecord;缺陷类型/时间 走 Cells
+            PopulateImageInfo(row);
+
             // 文件路径在 colNgPath(按列名取,索引依赖列顺序)
             string path = row.Cells["colNgPath"].Value as string;
             if (string.IsNullOrWhiteSpace(path))
@@ -322,6 +492,19 @@ namespace CCS_Traceback
                 ClearImagePreview();
                 return;
             }
+
+            // 占位行的"期望路径"是个目录(可能还不存在),双击直接用 Explorer 打开,
+            // 比弹"文件不存在"提示对用户排查为什么这次没存 NG 更实用。
+            if (System.IO.Directory.Exists(path))
+            {
+                try
+                {
+                    System.Diagnostics.Process.Start("explorer.exe", $"\"{path}\"");
+                }
+                catch { /* 静默:Explorer 启动失败就不动 */ }
+                return;
+            }
+
             if (!System.IO.File.Exists(path))
             {
                 MessageBox.Show("文件不存在:\n" + path,
@@ -345,6 +528,35 @@ namespace CCS_Traceback
                     "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 ClearImagePreview();
             }
+        }
+
+        /// <summary>
+        /// 双击 NG 行时把右侧"图像信息区"四个文本框填上对应值。
+        ///   - 二维码 / 编号:从 row.Tag 里的 DetectionRecord 读
+        ///   - 缺陷类型 / 时间:直接从 Cells 读(占位行 / 实际行都已就位)
+        /// Tag 为 null 时(空列表占位行)四项全清空。
+        /// 顺带把 ForeColor 强制设成 Red —— ReadOnly TextBox 在某些系统主题下
+        /// 会被主题样式覆盖 Designer.cs 里设的颜色,代码里再设一次更稳。
+        /// </summary>
+        private void PopulateImageInfo(DataGridViewRow row)
+        {
+            var rec = row.Tag as DetectionRecord;
+            string qr     = rec?.QrCode ?? "";
+            string alias  = rec?.Alias  ?? "";
+            string reason = (row.Cells["colNgReason"].Value as string) ?? "";
+            string time   = (row.Cells["colNgTime"].Value   as string) ?? "";
+
+            txtImgQr.Text     = qr;
+            txtImgAlias.Text  = alias;
+            txtImgDefect.Text = reason;
+            txtImgTime.Text   = time;
+
+            // 运行时强制红字(应对某些主题把 ReadOnly TextBox 的颜色重置)
+            var red = System.Drawing.Color.Red;
+            txtImgQr.ForeColor     = red;
+            txtImgAlias.ForeColor  = red;
+            txtImgDefect.ForeColor = red;
+            txtImgTime.ForeColor   = red;
         }
 
         private void ShowImagePreview(string path)
@@ -419,7 +631,7 @@ namespace CCS_Traceback
                                   .Where(s => !string.IsNullOrWhiteSpace(s));
             }
 
-            var list = aliases.Distinct().OrderBy(s => s).ToList();
+            var list = aliases.Distinct().ToList();
             string prevSelected = cboAlias.SelectedItem as string;
 
             cboAlias.Items.Clear();
@@ -428,6 +640,19 @@ namespace CCS_Traceback
             // 尽量保留上次选中的(联动后还有的话)
             if (!string.IsNullOrEmpty(prevSelected) && cboAlias.Items.Contains(prevSelected))
                 cboAlias.SelectedItem = prevSelected;
+
+            // 引导旁路:用户手动选了具体 QR(非"(全部)") → 从第 6 步切到第 7 步"选编号"。
+            // 旁路入口:从第 4 步(点按二维码统计)之后任意步都可被触发——
+            // 因为用户可能完全跳过统计窗,直接从主窗选 QR。
+            if (_guide != null && !isAll
+                && _guide.CurrentStep != GuideStep.PickDate
+                && _guide.CurrentStep != GuideStep.ClickUpdate
+                && _guide.CurrentStep != GuideStep.ConfirmUpdateMsg
+                && _guide.CurrentStep != GuideStep.DoubleClickNg
+                && _guide.CurrentStep != GuideStep.ClickScan)
+            {
+                _guide.GoTo(GuideStep.PickAlias);
+            }
         }
 
         // 兼容 btnUpdate 里直接铺全部编号的场景
@@ -476,6 +701,11 @@ namespace CCS_Traceback
             if (this.WindowState == FormWindowState.Minimized)
                 this.WindowState = FormWindowState.Normal;
             this.Activate();
+
+            // 引导:从统计窗双击行返回主窗 → 不管当前在哪步,都强制让 btnScanFiles 闪两下
+            // (提示用户"现在该扫描了")。即便是在 DoubleClickNg 之后回流的场景也成立。
+            if (_guide != null)
+                _guide.GoTo(GuideStep.ClickScan);
             this.BringToFront();
         }
 
@@ -515,15 +745,18 @@ namespace CCS_Traceback
             }
 
             // 一对一窗口:已经有一个开着(没被关掉)就直接激活它,不再弹新的。
-            // _lastLoaded* 更新过(date/start/end 与当前已开窗口不一致)→ 旧窗口过期,
-            // 关掉旧的、可以重开新的。
+            // 判定"同一份数据"必须同时满足:
+            //   1) date/start/end 三元组一致(避免同日期不同时段误激活)
+            //   2) _records 引用没变(用户重新"更新数据"后 _records 是新 List,
+            //      即使三元组一样旧窗也是过期数据 —— 必须关旧开新)
             if (_qrStatsForm != null && !_qrStatsForm.IsDisposed)
             {
                 bool sameAsLastLoaded =
                     _lastLoadedDate.HasValue && _lastLoadedStart.HasValue && _lastLoadedEnd.HasValue
                     && _lastLoadedDate.Value == date
                     && _lastLoadedStart.Value == startTs
-                    && _lastLoadedEnd.Value == endTs;
+                    && _lastLoadedEnd.Value == endTs
+                    && ReferenceEquals(_lastShownRecordsRef, _records);
 
                 if (sameAsLastLoaded)
                 {
@@ -549,7 +782,14 @@ namespace CCS_Traceback
             form.RowActivated += SelectQrAndAlias;
             form.FormClosed += QrStatsForm_FormClosed;
             _qrStatsForm = form;
+            _lastShownRecordsRef = _records;
             form.Show();
+
+            // 引导推进到第 5 步"双击统计行"
+            // 统计窗是独立窗体,主窗高亮器跨窗不便;此处只是更新步骤状态,
+            // 用户在统计窗里双击某行 → RowActivated → SelectQrAndAlias → 跳到第 8 步
+            if (_guide != null && _guide.CurrentStep == GuideStep.ClickQrStatistics)
+                _guide.GoTo(GuideStep.DoubleClickStatRow);
         }
 
         /// <summary>
@@ -598,7 +838,25 @@ namespace CCS_Traceback
 
         private void cboAlias_SelectedIndexChanged(object sender, EventArgs e)
         {
+            // 引导旁路:用户跳过统计窗,直接手动选了 Alias → 检查 QR+Alias 都已就绪
+            // 都已就绪 + 还没进入第 8 步 → 直进第 8 步"扫描文件"
+            if (_guide == null) return;
+            var step = _guide.CurrentStep;
+            // 早期步(选日期/点更新/确认弹窗)和后期步(双击 NG/扫描中)都不应被覆盖
+            if (step == GuideStep.PickDate
+                || step == GuideStep.ClickUpdate
+                || step == GuideStep.ConfirmUpdateMsg
+                || step == GuideStep.DoubleClickNg
+                || step == GuideStep.ClickScan)
+                return;
 
+            string qr = cboQr.SelectedItem as string;
+            string alias = cboAlias.SelectedItem as string;
+            if (!string.IsNullOrEmpty(qr) && qr != AllSentinel
+                && !string.IsNullOrEmpty(alias))
+            {
+                _guide.GoTo(GuideStep.ClickScan);
+            }
         }
 
         private void cboDefect_SelectedIndexChanged(object sender, EventArgs e)

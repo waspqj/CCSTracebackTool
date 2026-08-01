@@ -8,12 +8,26 @@ namespace CCS_Traceback
     /// <summary>
     /// 给定一个产品(QR + Alias + 日期),扫 NGImgSave 下的实际存在的 NG 错图:
     ///
+    ///   A 派(完整 4 层):
     ///   {NGImgSave}
-    ///     └─ {yyyy-MM}                ← 当月目录
-    ///         └─ {yyyy-MM-dd}         ← 当天目录
+    ///     └─ {yyyy-MM / yyyy_MM}      ← 当月目录(横线或下划线)
+    ///         └─ {yyyy-MM-dd / yyyy_MM_dd}  ← 当天目录(同上)
     ///             └─ {QR 或 "0"}      ← 产品二维码目录
     ///                 └─ {processName} ← 流程名目录
     ///                     └─ *.bmp / *.jpg
+    ///
+    ///   B 派(3 层,没有月份层):
+    ///   {NGImgSave}
+    ///     └─ {yyyy-MM-dd / yyyy_MM_dd}
+    ///         └─ {QR 或 "0"}
+    ///             └─ {processName}
+    ///                 └─ *.bmp / *.jpg
+    ///
+    /// 日期目录命名兼容横线和下划线两种,共 6 种候选:
+    ///   {yyyy-MM}/{yyyy-MM-dd}、{yyyy-MM}/{yyyy_MM_dd}、
+    ///   {yyyy_MM}/{yyyy-MM-dd}、{yyyy_MM}/{yyyy_MM_dd}、
+    ///   {yyyy-MM-dd}、{yyyy_MM_dd}
+    /// 第一个存在的目录胜出,都不在才返空 —— 见 TryFindDayDir。
     ///
     /// 4 种 NG 来源目录层一致,文件名模板不一致,但都按"最后一个 _ 切原因段"思路解析。
     /// QR 在 NGImgSave 里不会被清洗,目录名可能含 \ / : * ? " < > | 等 → 用 DirectoryInfo 拿目录名,
@@ -22,6 +36,47 @@ namespace CCS_Traceback
     public static class FileScanner
     {
         private static readonly string[] ImageExts = { ".bmp", ".jpg", ".jpeg", ".png" };
+
+        /// <summary>
+        /// 给定根目录 + 日期,挑出第一个实际存在的当天日期目录。
+        /// 现场日期层命名有 6 种可能组合,按下面的优先级匹配:
+        ///
+        ///   有月份层(4 种,ym × ymd 组合):
+        ///     {yyyy-MM}/{yyyy-MM-dd}
+        ///     {yyyy-MM}/{yyyy_MM_dd}
+        ///     {yyyy_MM}/{yyyy-MM-dd}
+        ///     {yyyy_MM}/{yyyy_MM_dd}
+        ///
+        ///   无月份层(2 种):
+        ///     {yyyy-MM-dd}
+        ///     {yyyy_MM_dd}
+        ///
+        /// 任一组合存在即返回,都不在返回 null。
+        /// 给主窗"占位行的期望路径"展示用,也给 Scan 用。
+        /// </summary>
+        public static string TryFindDayDir(string ngImgSaveRoot, DateTime date)
+        {
+            if (string.IsNullOrWhiteSpace(ngImgSaveRoot)) return null;
+            string ymDash = date.ToString("yyyy-MM");
+            string ymUs   = date.ToString("yyyy_MM");
+            string ymdDash = date.ToString("yyyy-MM-dd");
+            string ymdUs   = date.ToString("yyyy_MM_dd");
+
+            var candidates = new[]
+            {
+                Path.Combine(ngImgSaveRoot, ymDash,  ymdDash),
+                Path.Combine(ngImgSaveRoot, ymDash,  ymdUs),
+                Path.Combine(ngImgSaveRoot, ymUs,    ymdDash),
+                Path.Combine(ngImgSaveRoot, ymUs,    ymdUs),
+                Path.Combine(ngImgSaveRoot, ymdDash),
+                Path.Combine(ngImgSaveRoot, ymdUs),
+            };
+            foreach (var c in candidates)
+            {
+                if (Directory.Exists(c)) return c;
+            }
+            return null;
+        }
 
         /// <summary>
         /// 把 QR 字符串清洗成"可作文件名 / 可作目录名"的形态。
@@ -59,12 +114,9 @@ namespace CCS_Traceback
             if (string.IsNullOrWhiteSpace(ngImgSaveRoot)) return result;
             if (string.IsNullOrWhiteSpace(qr)) return result;
 
-            string monthStr = date.ToString("yyyy-MM");
-            string dateStr = date.ToString("yyyy-MM-dd");
-
-            // NGImgSave/{yyyy-MM}/{yyyy-MM-dd}/  存在才往下走
-            string dayDir = Path.Combine(ngImgSaveRoot, monthStr, dateStr);
-            if (!Directory.Exists(dayDir)) return result;
+            // 6 种路径形态(ym / ymd 各 dash 或 underscore 组合)兼容 —— 走 TryFindDayDir
+            string dayDir = TryFindDayDir(ngImgSaveRoot, date);
+            if (dayDir == null) return result;
 
             // 找当天目录下匹配 QR 的子目录(容错:目录名可能含非法字符或带前后缀)
             string qrDir = FindQrDir(dayDir, qr);
@@ -144,30 +196,37 @@ namespace CCS_Traceback
 
         /// <summary>
         /// 由基本 DetectionRecord 实例派生文件行所需的展示字段(时间戳从文件名拿)。
+        /// 用扫描时的 date(用户选定的日期)当基准 + 文件名抽出的时分秒,这样 Time.Year
+        /// 与 CSV 行 Time.Year 一致,MainForm 那边 10 分钟差比对才能成立。
+        /// 解析失败则退回 date 当天 00:00:00(自然被 10 分钟阈值筛掉,不污染列表)。
         /// </summary>
         private static DetectionRecord NewFileRecord(string qr, string alias, DateTime date, string fullPath)
         {
             string fname = Path.GetFileName(fullPath);
+            DateTime? parsed = ParseTimeFromFileName(fname);
+            TimeSpan tod = parsed.HasValue ? parsed.Value.TimeOfDay : TimeSpan.Zero;
             return new DetectionRecord
             {
                 QrCode = qr,
                 Alias = alias,
                 ResultRaw = "N",
-                Time = ParseTimeFromFileName(fname) ?? date,  // 拿不到时分秒就退回日期 00:00
+                Time = date.Date + tod,
                 FileName = fname,
                 FilePath = fullPath,
             };
         }
 
-        // 文件名解析:4 类模板统一按"最后一个 _ 切 → 前段是原因"。
+        // 文件名解析:统一锚定最后一个 _ ,按其后剩几位判断时间戳格式:
+        //   - 剩 4 位 → HHmmss_ffff,reason 在 lastUnderscore 之前 7 位之前
+        //   - 剩 6 位 → HHmmss(无毫秒段),reason 在 lastUnderscore 之前
+        // 都不匹配则整段兜底当 reason,Time 退回当天日期。
+        //
         // ① 类 Camera9_{i}_{HHmmss}.jpg 文件名里没有原因段 → 用 processName 兜底。
         //
-        // 时间戳段允许的形式(末尾连续数字段):
-        //   - HHmmss_ffff  → 1452 → 用 LastIndexOf('_') 切后段,后段是 6+4=10 数字
-        //   - HHmmss       → 6 位数字
-        // 解析失败(切完不是数字)就把整段当原因,Time 退回当天。
+        // 现场相机写文件名时常加 {序号}_ 前缀(例 10_焊点焊穿,焊点偏移_030527_4143),
+        // 这个序号没业务含义,要剥掉再切。侧面相机无该前缀,跳过即可。
         //
-        // ② / ③ / ④ 类的原因段可能残留下英文逗号 "," 或中文逗号 "," → TrimEnd 两次。
+        // 原因段可能残留下英文逗号 "," 或中文逗号 "," → TrimEnd 清理。
         private static string ParseNgReason(string fnameNoExt, string processName)
         {
             if (string.IsNullOrEmpty(fnameNoExt)) return processName;
@@ -179,39 +238,41 @@ namespace CCS_Traceback
                 return processName;
             }
 
+            // 剥掉开头的 {数字}_ 前缀
+            fnameNoExt = StripLeadingSeq(fnameNoExt);
+            if (string.IsNullOrEmpty(fnameNoExt)) return processName;
+
+            // 锚定最后一个 _
             int lastUnderscore = fnameNoExt.LastIndexOf('_');
-            if (lastUnderscore <= 0)
+            if (lastUnderscore < 0)
             {
                 // 没有任何 "_" —— 整段当原因
                 return CleanReason(fnameNoExt);
             }
 
-            string timePart = fnameNoExt.Substring(lastUnderscore + 1);
-            // 校验:切完后段是 HHmmss 6 位纯数字 → 前面那段就是原因
-            if (timePart.Length == 6 && timePart.All(char.IsDigit))
-            {
-                return CleanReason(fnameNoExt.Substring(0, lastUnderscore));
-            }
+            string tail = fnameNoExt.Substring(lastUnderscore + 1);
 
-            // 切完后段不是 6 位数字 → 怀疑是 HHmmss_ffff 这种"含 _ 的时间戳段"
-            // 整段文件名已经按 LastIndexOf 切过一次,这里再往前找一个 _ 试切
-            int prevUnderscore = fnameNoExt.LastIndexOf('_', lastUnderscore - 1);
-            if (prevUnderscore > 0)
+            // 情形 1:HHmmss_ffff —— 尾部恰好 4 位数字
+            if (tail.Length == 4 && tail.All(char.IsDigit))
             {
-                // 再切一次后:长度 = 6 + 1 + 4 = 11,且中间一位是 _
-                if (lastUnderscore - prevUnderscore == 7
-                    && fnameNoExt[prevUnderscore + 6] == '_')
+                if (lastUnderscore >= 6)
                 {
-                    string hms = fnameNoExt.Substring(prevUnderscore + 1, 6);
-                    string fff = fnameNoExt.Substring(prevUnderscore + 7, 4);
-                    if (hms.All(char.IsDigit) && fff.All(char.IsDigit))
+                    string hms = fnameNoExt.Substring(lastUnderscore - 6, 6);
+                    if (hms.All(char.IsDigit))
                     {
-                        return CleanReason(fnameNoExt.Substring(0, prevUnderscore));
+                        // reason 是 lastUnderscore - 6 之前的整段(连同 HHmmss 一起剥掉)
+                        return CleanReason(fnameNoExt.Substring(0, lastUnderscore - 6));
                     }
                 }
             }
 
-            // 都不匹配 → 整段当原因兜底
+            // 情形 2:HHmmss —— 尾部恰好 6 位数字
+            if (tail.Length == 6 && tail.All(char.IsDigit))
+            {
+                return CleanReason(fnameNoExt.Substring(0, lastUnderscore));
+            }
+
+            // 都对不上 → 整段兜底
             return CleanReason(fnameNoExt);
         }
 
@@ -224,9 +285,24 @@ namespace CCS_Traceback
             return s.TrimEnd(',', '，', '_', '-').Trim();
         }
 
+        /// <summary>
+        /// 剥掉文件名前缀 {N}_(相机写文件时加的流水号,无业务含义)。
+        /// 举例 "10_焊点焊穿,焊点偏移_030527_4143" → "焊点焊穿,焊点偏移_030527_4143"。
+        /// 没匹配到 {数字}_ 就原样返回(侧面相机这种文件名直接走这条)。
+        /// </summary>
+        private static string StripLeadingSeq(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return s;
+            int i = 0;
+            while (i < s.Length && char.IsDigit(s[i])) i++;
+            if (i > 0 && i < s.Length && s[i] == '_')
+                return s.Substring(i + 1);
+            return s;
+        }
+
         // 文件名里抽时间戳:
-        //   - 末尾 6 位纯数字 → HHmmss
-        //   - 末尾形如 HHmmss_ffff(共 11 位)→ 取这 6+4
+        //   - 末尾形如 HHmmss_ffff:中间下划线在倒数第 5 位(6 位 HHmmss + 1 位 _ + 4 位 ffff)
+        //   - 退回末尾 6 位纯数字 → HHmmss
         // 找不到就 null(让 NewFileRecord 退回当天日期)。
         private static DateTime? ParseTimeFromFileName(string fname)
         {
@@ -236,8 +312,9 @@ namespace CCS_Traceback
             string body = dot > 0 ? fname.Substring(0, dot) : fname;
             if (string.IsNullOrEmpty(body)) return null;
 
-            // 优先匹配 HHmmss_ffff:整段至少 11 位,倒数第 7 位必须是 _
-            if (body.Length >= 11 && body[body.Length - 7] == '_')
+            // 优先匹配 HHmmss_ffff:整段至少 11 位,倒数第 5 位必须是 _
+            // (HHmmss 6 位 + _ 1 位 + ffff 4 位 = 11 位,_ 落在 length-5)
+            if (body.Length >= 11 && body[body.Length - 5] == '_')
             {
                 string hms = body.Substring(body.Length - 11, 6);
                 string fff = body.Substring(body.Length - 4, 4);

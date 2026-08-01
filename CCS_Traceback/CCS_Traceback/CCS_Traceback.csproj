@@ -51,6 +51,8 @@
     <Compile Include="CsvLogReader.cs" />
     <Compile Include="ConfigLoader.cs" />
     <Compile Include="FileScanner.cs" />
+    <Compile Include="GuideStep.cs" />
+    <Compile Include="GuideHighlighter.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -77,6 +79,9 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="QrStatisticsForm.resx">
+      <DependentUpon>QrStatisticsForm.cs</DependentUpon>
+    </EmbeddedResource>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

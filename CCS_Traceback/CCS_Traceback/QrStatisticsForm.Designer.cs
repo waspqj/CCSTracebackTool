@@ -68,6 +68,7 @@ namespace CCS_Traceback
             this.colAlias.HeaderText = "编号";
             this.colAlias.Name = "colAlias";
             this.colAlias.ReadOnly = true;
+            this.colAlias.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             this.colAlias.Width = 140;
             //
             // colTime

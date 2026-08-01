@@ -33,9 +33,7 @@ namespace CCS_Traceback
             this.colNgSeq = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colNgType = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colNgTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colNgStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colNgReason = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colNgFileName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colNgPath = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.lblNgList = new System.Windows.Forms.Label();
             this.pnlFilters = new System.Windows.Forms.Panel();
@@ -62,6 +60,8 @@ namespace CCS_Traceback
             this.lblImgAlias = new System.Windows.Forms.Label();
             this.txtImgQr = new System.Windows.Forms.TextBox();
             this.lblImgQr = new System.Windows.Forms.Label();
+            this.txtImgTime = new System.Windows.Forms.TextBox();
+            this.lblImgTime = new System.Windows.Forms.Label();
             this.pnlImageBox = new System.Windows.Forms.Panel();
             this.txtImageTextPreview = new System.Windows.Forms.TextBox();
             this.picImagePreview = new System.Windows.Forms.PictureBox();
@@ -72,6 +72,7 @@ namespace CCS_Traceback
             this.pnlChartBox = new System.Windows.Forms.Panel();
             this.lblChartPlaceholder = new System.Windows.Forms.Label();
             this.lblChartTitle = new System.Windows.Forms.Label();
+            this.pnlGuideOverlay = new System.Windows.Forms.Panel();
             ((System.ComponentModel.ISupportInitialize)(this.splitMain)).BeginInit();
             this.splitMain.Panel1.SuspendLayout();
             this.splitMain.Panel2.SuspendLayout();
@@ -121,15 +122,12 @@ namespace CCS_Traceback
             this.dgvNgList.AllowUserToAddRows = false;
             this.dgvNgList.AllowUserToDeleteRows = false;
             this.dgvNgList.AllowUserToResizeRows = false;
-            this.dgvNgList.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.dgvNgList.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvNgList.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colNgSeq,
             this.colNgType,
             this.colNgTime,
-            this.colNgStatus,
             this.colNgReason,
-            this.colNgFileName,
             this.colNgPath});
             this.dgvNgList.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvNgList.Location = new System.Drawing.Point(15, 589);
@@ -151,13 +149,16 @@ namespace CCS_Traceback
             this.colNgSeq.MinimumWidth = 8;
             this.colNgSeq.Name = "colNgSeq";
             this.colNgSeq.ReadOnly = true;
+            this.colNgSeq.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.colNgSeq.Width = 45;
             // 
             // colNgType
             // 
-            this.colNgType.HeaderText = "检测类型";
+            this.colNgType.HeaderText = "检测别名";
             this.colNgType.MinimumWidth = 8;
             this.colNgType.Name = "colNgType";
             this.colNgType.ReadOnly = true;
+            this.colNgType.Width = 130;
             // 
             // colNgTime
             // 
@@ -165,27 +166,15 @@ namespace CCS_Traceback
             this.colNgTime.MinimumWidth = 8;
             this.colNgTime.Name = "colNgTime";
             this.colNgTime.ReadOnly = true;
-            // 
-            // colNgStatus
-            // 
-            this.colNgStatus.HeaderText = "判定";
-            this.colNgStatus.MinimumWidth = 8;
-            this.colNgStatus.Name = "colNgStatus";
-            this.colNgStatus.ReadOnly = true;
+            this.colNgTime.Width = 150;
             // 
             // colNgReason
             // 
-            this.colNgReason.HeaderText = "原因";
+            this.colNgReason.HeaderText = "NG原因";
             this.colNgReason.MinimumWidth = 8;
             this.colNgReason.Name = "colNgReason";
             this.colNgReason.ReadOnly = true;
-            // 
-            // colNgFileName
-            // 
-            this.colNgFileName.HeaderText = "文件名";
-            this.colNgFileName.MinimumWidth = 8;
-            this.colNgFileName.Name = "colNgFileName";
-            this.colNgFileName.ReadOnly = true;
+            this.colNgReason.Width = 380;
             // 
             // colNgPath
             // 
@@ -193,6 +182,7 @@ namespace CCS_Traceback
             this.colNgPath.MinimumWidth = 8;
             this.colNgPath.Name = "colNgPath";
             this.colNgPath.ReadOnly = true;
+            this.colNgPath.Width = 340;
             // 
             // lblNgList
             // 
@@ -429,6 +419,8 @@ namespace CCS_Traceback
             this.pnlImageInfo.Controls.Add(this.lblImgAlias);
             this.pnlImageInfo.Controls.Add(this.txtImgQr);
             this.pnlImageInfo.Controls.Add(this.lblImgQr);
+            this.pnlImageInfo.Controls.Add(this.txtImgTime);
+            this.pnlImageInfo.Controls.Add(this.lblImgTime);
             this.pnlImageInfo.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlImageInfo.Location = new System.Drawing.Point(0, 0);
             this.pnlImageInfo.Margin = new System.Windows.Forms.Padding(0);
@@ -438,18 +430,21 @@ namespace CCS_Traceback
             // 
             // txtImgDefect
             // 
-            this.txtImgDefect.Location = new System.Drawing.Point(729, 6);
+            this.txtImgDefect.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F, System.Drawing.FontStyle.Bold);
+            this.txtImgDefect.ForeColor = System.Drawing.Color.Red;
+            this.txtImgDefect.Location = new System.Drawing.Point(720, -8);
             this.txtImgDefect.Margin = new System.Windows.Forms.Padding(4);
             this.txtImgDefect.Name = "txtImgDefect";
             this.txtImgDefect.ReadOnly = true;
-            this.txtImgDefect.Size = new System.Drawing.Size(89, 28);
+            this.txtImgDefect.Size = new System.Drawing.Size(350, 38);
             this.txtImgDefect.TabIndex = 5;
+            this.txtImgDefect.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
             // lblImgDefect
             // 
             this.lblImgDefect.AutoSize = true;
             this.lblImgDefect.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F);
-            this.lblImgDefect.Location = new System.Drawing.Point(596, 3);
+            this.lblImgDefect.Location = new System.Drawing.Point(596, 0);
             this.lblImgDefect.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblImgDefect.Name = "lblImgDefect";
             this.lblImgDefect.Size = new System.Drawing.Size(116, 31);
@@ -458,18 +453,21 @@ namespace CCS_Traceback
             // 
             // txtImgAlias
             // 
-            this.txtImgAlias.Location = new System.Drawing.Point(457, 6);
+            this.txtImgAlias.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F, System.Drawing.FontStyle.Bold);
+            this.txtImgAlias.ForeColor = System.Drawing.Color.Red;
+            this.txtImgAlias.Location = new System.Drawing.Point(442, -8);
             this.txtImgAlias.Margin = new System.Windows.Forms.Padding(4);
             this.txtImgAlias.Name = "txtImgAlias";
             this.txtImgAlias.ReadOnly = true;
-            this.txtImgAlias.Size = new System.Drawing.Size(102, 28);
+            this.txtImgAlias.Size = new System.Drawing.Size(118, 38);
             this.txtImgAlias.TabIndex = 3;
+            this.txtImgAlias.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
             // lblImgAlias
             // 
             this.lblImgAlias.AutoSize = true;
             this.lblImgAlias.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F);
-            this.lblImgAlias.Location = new System.Drawing.Point(365, 0);
+            this.lblImgAlias.Location = new System.Drawing.Point(356, -1);
             this.lblImgAlias.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblImgAlias.Name = "lblImgAlias";
             this.lblImgAlias.Size = new System.Drawing.Size(68, 31);
@@ -478,23 +476,49 @@ namespace CCS_Traceback
             // 
             // txtImgQr
             // 
-            this.txtImgQr.Location = new System.Drawing.Point(159, 3);
+            this.txtImgQr.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F, System.Drawing.FontStyle.Bold);
+            this.txtImgQr.ForeColor = System.Drawing.Color.Red;
+            this.txtImgQr.Location = new System.Drawing.Point(125, -8);
             this.txtImgQr.Margin = new System.Windows.Forms.Padding(4);
             this.txtImgQr.Name = "txtImgQr";
             this.txtImgQr.ReadOnly = true;
-            this.txtImgQr.Size = new System.Drawing.Size(179, 28);
+            this.txtImgQr.Size = new System.Drawing.Size(204, 38);
             this.txtImgQr.TabIndex = 1;
+            this.txtImgQr.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
             // lblImgQr
             // 
             this.lblImgQr.AutoSize = true;
             this.lblImgQr.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F);
-            this.lblImgQr.Location = new System.Drawing.Point(34, 3);
+            this.lblImgQr.Location = new System.Drawing.Point(34, 4);
             this.lblImgQr.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblImgQr.Name = "lblImgQr";
             this.lblImgQr.Size = new System.Drawing.Size(92, 31);
             this.lblImgQr.TabIndex = 0;
             this.lblImgQr.Text = "二维码:";
+            // 
+            // txtImgTime
+            // 
+            this.txtImgTime.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F, System.Drawing.FontStyle.Bold);
+            this.txtImgTime.ForeColor = System.Drawing.Color.Red;
+            this.txtImgTime.Location = new System.Drawing.Point(1207, -8);
+            this.txtImgTime.Margin = new System.Windows.Forms.Padding(4);
+            this.txtImgTime.Name = "txtImgTime";
+            this.txtImgTime.ReadOnly = true;
+            this.txtImgTime.Size = new System.Drawing.Size(231, 38);
+            this.txtImgTime.TabIndex = 7;
+            this.txtImgTime.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // lblImgTime
+            // 
+            this.lblImgTime.AutoSize = true;
+            this.lblImgTime.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F);
+            this.lblImgTime.Location = new System.Drawing.Point(1131, 4);
+            this.lblImgTime.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lblImgTime.Name = "lblImgTime";
+            this.lblImgTime.Size = new System.Drawing.Size(68, 31);
+            this.lblImgTime.TabIndex = 6;
+            this.lblImgTime.Text = "时间:";
             // 
             // pnlImageBox
             // 
@@ -618,6 +642,15 @@ namespace CCS_Traceback
             this.lblChartTitle.TabIndex = 0;
             this.lblChartTitle.Text = "缺陷类型统计:";
             // 
+            // pnlGuideOverlay
+            // 
+            this.pnlGuideOverlay.BackColor = System.Drawing.Color.Transparent;
+            this.pnlGuideOverlay.Location = new System.Drawing.Point(0, 0);
+            this.pnlGuideOverlay.Name = "pnlGuideOverlay";
+            this.pnlGuideOverlay.Size = new System.Drawing.Size(0, 0);
+            this.pnlGuideOverlay.TabIndex = 99;
+            this.pnlGuideOverlay.Visible = false;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 18F);
@@ -679,9 +712,7 @@ namespace CCS_Traceback
         private System.Windows.Forms.DataGridViewTextBoxColumn colNgSeq;
         private System.Windows.Forms.DataGridViewTextBoxColumn colNgType;
         private System.Windows.Forms.DataGridViewTextBoxColumn colNgTime;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colNgStatus;
         private System.Windows.Forms.DataGridViewTextBoxColumn colNgReason;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colNgFileName;
         private System.Windows.Forms.DataGridViewTextBoxColumn colNgPath;
         private System.Windows.Forms.TableLayoutPanel tlpRight;
         private System.Windows.Forms.Panel pnlImageInfo;
@@ -691,6 +722,8 @@ namespace CCS_Traceback
         private System.Windows.Forms.TextBox txtImgAlias;
         private System.Windows.Forms.Label lblImgDefect;
         private System.Windows.Forms.TextBox txtImgDefect;
+        private System.Windows.Forms.Label lblImgTime;
+        private System.Windows.Forms.TextBox txtImgTime;
         private System.Windows.Forms.Panel pnlImageBox;
         private System.Windows.Forms.Label lblImagePlaceholder;
         private System.Windows.Forms.PictureBox picImagePreview;
@@ -702,5 +735,6 @@ namespace CCS_Traceback
         private System.Windows.Forms.Label lblChartPlaceholder;
         private System.Windows.Forms.Label lblStatsText;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Panel pnlGuideOverlay;
     }
 }
