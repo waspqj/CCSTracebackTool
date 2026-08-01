@@ -72,7 +72,6 @@ namespace CCS_Traceback
             this.pnlChartBox = new System.Windows.Forms.Panel();
             this.lblChartPlaceholder = new System.Windows.Forms.Label();
             this.lblChartTitle = new System.Windows.Forms.Label();
-            this.pnlGuideOverlay = new System.Windows.Forms.Panel();
             ((System.ComponentModel.ISupportInitialize)(this.splitMain)).BeginInit();
             this.splitMain.Panel1.SuspendLayout();
             this.splitMain.Panel2.SuspendLayout();
@@ -641,16 +640,7 @@ namespace CCS_Traceback
             this.lblChartTitle.Size = new System.Drawing.Size(164, 31);
             this.lblChartTitle.TabIndex = 0;
             this.lblChartTitle.Text = "缺陷类型统计:";
-            // 
-            // pnlGuideOverlay
-            // 
-            this.pnlGuideOverlay.BackColor = System.Drawing.Color.Transparent;
-            this.pnlGuideOverlay.Location = new System.Drawing.Point(0, 0);
-            this.pnlGuideOverlay.Name = "pnlGuideOverlay";
-            this.pnlGuideOverlay.Size = new System.Drawing.Size(0, 0);
-            this.pnlGuideOverlay.TabIndex = 99;
-            this.pnlGuideOverlay.Visible = false;
-            // 
+            //
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 18F);
@@ -735,6 +725,5 @@ namespace CCS_Traceback
         private System.Windows.Forms.Label lblChartPlaceholder;
         private System.Windows.Forms.Label lblStatsText;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Panel pnlGuideOverlay;
     }
 }

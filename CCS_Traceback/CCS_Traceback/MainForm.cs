@@ -33,6 +33,13 @@ namespace CCS_Traceback
         private TimeSpan? _lastLoadedStart;
         private TimeSpan? _lastLoadedEnd;
 
+        // 上一次成功 "扫描文件" 时缓存的 (QR, Alias, Date)。
+        // 再次点击 btnScanFiles 时三者都没变就直接 return,不重扫 NGImgSave、不重建 dgvNgList,
+        // 保留用户已选中的行 / 高亮状态。
+        private string _lastScannedQr;
+        private string _lastScannedAlias;
+        private DateTime? _lastScannedDate;
+
         // 当前已打开的 "按二维码统计" 窗口引用,保持一对一一窗口。
         // 关掉后通过 FormClosed 事件清回 null。
         private QrStatisticsForm _qrStatsForm;
@@ -47,9 +54,8 @@ namespace CCS_Traceback
         // btnUpdate 用 PathMesLog,btnScanFiles 用 NGImgSave。
         private ApplicationSettingDto _appConfig;
 
-        // 引导式高亮管理器:跟踪 9 步状态机,在目标控件四周画脉动边框。
-        // 由 MainForm_Load 初始化,各推进点(btnUpdate / btnQrStatistics / dgvNgList_CellDoubleClick 等)
-        // 调用 _guide.GoTo(step) 切换;双击 NG 行后自动循环回 PickDate。
+        // 引导式高亮管理器:为 3 个主按钮(btnUpdate / btnQrStatistics / btnScanFiles)
+        // 依次打绿,扫描完成后清空。线性流程,不循环。
         private GuideHighlighter _guide;
 
         // 柱状图配色(循环使用)
@@ -132,34 +138,17 @@ namespace CCS_Traceback
             // 启动时柱状图就铺满所有硬编码缺陷类型(均为 0)
             BuildDefectCounts();
 
-            // 启动引导式高亮:从第 1 步"选日期"开始。
-            _guide = new GuideHighlighter(this);
-            _guide.StepChanged += OnGuideStepChanged;
-            _guide.Start();
+            // 启动引导式高亮:不主动点,等用户先选日期
+            _guide = new GuideHighlighter();
 
-            // 引导推进埋点
+            // 引导推进埋点:选完日期 → 高亮"更新数据"
             dtpDate.ValueChanged += DtpDate_ValueChanged;
-            dgvNgList.CellDoubleClick += DgvNgList_CellDoubleClickForGuide;
         }
 
         private void DtpDate_ValueChanged(object sender, EventArgs e)
         {
-            // 用户改了日期 → 强制跳到"点更新数据",无论当前在哪一步
-            // (日期 = 整个流程的"重置"信号,改了就要从更新数据重新开始)
-            if (_guide != null)
-                _guide.GoTo(GuideStep.ClickUpdate);
-        }
-
-        private void DgvNgList_CellDoubleClickForGuide(object sender, DataGridViewCellEventArgs e)
-        {
-            // 第 9 步触发条件:用户双击 NG 行 → 循环回第 1 步"选日期"
-            if (_guide != null && _guide.CurrentStep == GuideStep.DoubleClickNg && e.RowIndex >= 0)
-                _guide.GoTo(GuideStep.PickDate);
-        }
-
-        private void OnGuideStepChanged(GuideStep step, Control target)
-        {
-            // 步骤变更回调(目前不更新任何 UI 文案,留作扩展用 —— 比如 lblGuideStep 提示)
+            // 引导第 1 步:选定日期 → 高亮"更新数据"
+            _guide?.Highlight(btnUpdate);
         }
 
         /// <summary>
@@ -272,13 +261,6 @@ namespace CCS_Traceback
             // 刷新缺陷类型柱状图
             BuildDefectCounts();
 
-            // 引导第 3 步:MessageBox.Show 弹出 → 调度高亮 OK 按钮 → 等用户点 OK → 进 4
-            if (_records.Count > 0)
-            {
-                _guide.GoTo(GuideStep.ConfirmUpdateMsg);
-                _guide.HighlightMessageBoxOk("更新数据");
-            }
-
             MessageBox.Show(
                 $"日期 {date:yyyy-MM-dd} 匹配 {matchedFiles} 个 CSV。\n" +
                 $"时段 {startTs:hh\\:mm} ~ {endTs:hh\\:mm} 内载入 {_records.Count} 条记录。",
@@ -286,8 +268,8 @@ namespace CCS_Traceback
 
             if (_records.Count > 0)
             {
-                // 用户已点 OK,引导推进到第 4 步"按二维码统计"
-                _guide.GoTo(GuideStep.ClickQrStatistics);
+                // 引导推进:更新数据完成 → 高亮"按二维码统计"
+                _guide.Highlight(btnQrStatistics);
             }
 
             // 缓存本次成功加载的日期 + 时段,用于重复点击守卫
@@ -342,6 +324,14 @@ namespace CCS_Traceback
 
             DateTime date = dtpDate.Value.Date;
 
+            // 重复点击守卫:(QR, Alias, Date) 都没变 → 不重扫、不重建,保留选中状态
+            if (_lastScannedQr == qr
+                && _lastScannedAlias == alias
+                && _lastScannedDate == date)
+            {
+                return;
+            }
+
             // Step 1:挑出本次相关的 CSV 检测行(QR + alias + 当天,按 Time 升序)
             var csvRows = _records
                 .Where(r => r.QrCode == qr
@@ -368,9 +358,13 @@ namespace CCS_Traceback
                 return;
             }
 
-            // 扫描成功 → 引导推进到第 9 步"双击 NG 行"
-            if (_guide != null && _guide.CurrentStep == GuideStep.ClickScan)
-                _guide.GoTo(GuideStep.DoubleClickNg);
+            // 扫描成功 → 缓存 (QR, Alias, Date),供重复点击守卫用
+            _lastScannedQr = qr;
+            _lastScannedAlias = alias;
+            _lastScannedDate = date;
+
+            // 引导流程结束:扫描成功后清除当前高亮,3 步走完不再循环
+            _guide?.Clear();
 
             // 时间常量
             const int SEG_GAP_SECONDS = 30;        // 同 processName 内,相邻 NG > 30 秒切新段
@@ -640,19 +634,6 @@ namespace CCS_Traceback
             // 尽量保留上次选中的(联动后还有的话)
             if (!string.IsNullOrEmpty(prevSelected) && cboAlias.Items.Contains(prevSelected))
                 cboAlias.SelectedItem = prevSelected;
-
-            // 引导旁路:用户手动选了具体 QR(非"(全部)") → 从第 6 步切到第 7 步"选编号"。
-            // 旁路入口:从第 4 步(点按二维码统计)之后任意步都可被触发——
-            // 因为用户可能完全跳过统计窗,直接从主窗选 QR。
-            if (_guide != null && !isAll
-                && _guide.CurrentStep != GuideStep.PickDate
-                && _guide.CurrentStep != GuideStep.ClickUpdate
-                && _guide.CurrentStep != GuideStep.ConfirmUpdateMsg
-                && _guide.CurrentStep != GuideStep.DoubleClickNg
-                && _guide.CurrentStep != GuideStep.ClickScan)
-            {
-                _guide.GoTo(GuideStep.PickAlias);
-            }
         }
 
         // 兼容 btnUpdate 里直接铺全部编号的场景
@@ -701,12 +682,10 @@ namespace CCS_Traceback
             if (this.WindowState == FormWindowState.Minimized)
                 this.WindowState = FormWindowState.Normal;
             this.Activate();
-
-            // 引导:从统计窗双击行返回主窗 → 不管当前在哪步,都强制让 btnScanFiles 闪两下
-            // (提示用户"现在该扫描了")。即便是在 DoubleClickNg 之后回流的场景也成立。
-            if (_guide != null)
-                _guide.GoTo(GuideStep.ClickScan);
             this.BringToFront();
+
+            // 引导第 3 步:在统计窗里双击了某行 → 高亮"扫描文件"
+            _guide?.Highlight(btnScanFiles);
         }
 
         private void btnQrStatistics_Click(object sender, EventArgs e)
@@ -785,11 +764,7 @@ namespace CCS_Traceback
             _lastShownRecordsRef = _records;
             form.Show();
 
-            // 引导推进到第 5 步"双击统计行"
-            // 统计窗是独立窗体,主窗高亮器跨窗不便;此处只是更新步骤状态,
-            // 用户在统计窗里双击某行 → RowActivated → SelectQrAndAlias → 跳到第 8 步
-            if (_guide != null && _guide.CurrentStep == GuideStep.ClickQrStatistics)
-                _guide.GoTo(GuideStep.DoubleClickStatRow);
+            // 引导:不在此处点 btnScanFiles,等用户在统计窗里双击行再亮(SelectQrAndAlias 里)
         }
 
         /// <summary>
@@ -838,25 +813,7 @@ namespace CCS_Traceback
 
         private void cboAlias_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // 引导旁路:用户跳过统计窗,直接手动选了 Alias → 检查 QR+Alias 都已就绪
-            // 都已就绪 + 还没进入第 8 步 → 直进第 8 步"扫描文件"
-            if (_guide == null) return;
-            var step = _guide.CurrentStep;
-            // 早期步(选日期/点更新/确认弹窗)和后期步(双击 NG/扫描中)都不应被覆盖
-            if (step == GuideStep.PickDate
-                || step == GuideStep.ClickUpdate
-                || step == GuideStep.ConfirmUpdateMsg
-                || step == GuideStep.DoubleClickNg
-                || step == GuideStep.ClickScan)
-                return;
-
-            string qr = cboQr.SelectedItem as string;
-            string alias = cboAlias.SelectedItem as string;
-            if (!string.IsNullOrEmpty(qr) && qr != AllSentinel
-                && !string.IsNullOrEmpty(alias))
-            {
-                _guide.GoTo(GuideStep.ClickScan);
-            }
+            // 引导不依赖此处联动
         }
 
         private void cboDefect_SelectedIndexChanged(object sender, EventArgs e)
