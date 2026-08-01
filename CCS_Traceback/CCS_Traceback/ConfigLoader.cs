@@ -6,9 +6,9 @@ using System.Text;
 namespace CCS_Traceback
 {
     /// <summary>
-    /// 从 ApplicationSetting.json 加载配置路径(MES 日志 / 检测图 / NG 错图)。
+    /// 从 ApplicationSetting.json 加载配置路径(MES 日志 / NG 错图)。
     ///
-    /// 反序列化用的 DTO 只取这个工具真正用到的字段,
+    /// 反序列化的 DTO 只取这个工具真正用到的字段,
     /// 不去复刻 CCS_AOI 项目的 AppConfig 全字段。
     /// 加载失败一律抛 ConfigLoadException,由调用方决定怎么弹错。
     /// </summary>
@@ -20,12 +20,13 @@ namespace CCS_Traceback
         /// </summary>
         public static ApplicationSettingDto Load(string jsonPath)
         {
+            // 1. 文件存在性
             if (string.IsNullOrWhiteSpace(jsonPath))
                 throw new ConfigLoadException("路径为空。");
-
             if (!File.Exists(jsonPath))
                 throw new ConfigLoadException($"找不到文件: {jsonPath}");
 
+            // 2. 读文本
             string text;
             try
             {
@@ -35,10 +36,10 @@ namespace CCS_Traceback
             {
                 throw new ConfigLoadException("读取文件失败: " + ex.Message, ex);
             }
-
             if (string.IsNullOrWhiteSpace(text))
                 throw new ConfigLoadException("文件内容为空。");
 
+            // 3. 反序列化
             ApplicationSettingDto dto;
             try
             {
@@ -52,11 +53,10 @@ namespace CCS_Traceback
             {
                 throw new ConfigLoadException("JSON 解析失败: " + ex.Message, ex);
             }
-
             if (dto == null)
                 throw new ConfigLoadException("JSON 解析结果为空。");
 
-            // 两个字段必须都存在 —— MES 日志读 CSV + NG 错图扫描都要
+            // 4. 两个字段必须都存在 —— MES 日志读 CSV + NG 错图扫描都要
             if (string.IsNullOrWhiteSpace(dto.PathMesLog))
                 throw new ConfigLoadException("文件里没有 PathMesLog 字段,或字段值为空。");
             if (string.IsNullOrWhiteSpace(dto.NGImgSave))
@@ -76,7 +76,6 @@ namespace CCS_Traceback
         [System.Runtime.Serialization.DataMember(Name = "PathMesLog", IsRequired = false, EmitDefaultValue = false)]
         public string PathMesLog { get; set; }
 
-        /// <summary>NG 错图根目录(NGImgSave)。</summary>
         [System.Runtime.Serialization.DataMember(Name = "NGImgSave", IsRequired = false, EmitDefaultValue = false)]
         public string NGImgSave { get; set; }
     }

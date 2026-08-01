@@ -4,8 +4,12 @@ using System.Collections.Generic;
 namespace CCS_Traceback
 {
     /// <summary>
-    /// 一行 CSV 检测记录的内存表示。
-    /// 状态判定规则:第 3 列(第一个 1结果)的值为 N -> NG,Y -> OK,其他原样保留。
+    /// 一行 CSV 检测记录(也用于 FileScanner 扫描出的 NG 文件行)的内存表示。
+    ///
+    /// CSV 行:Alias / QrCode / ResultRaw / Reason / Time 由 CsvLogReader 填;
+    /// NG 文件行:QrCode / Alias / Time / FileName / FilePath / FileReason / ProcessName 由 FileScanner 填。
+    ///
+    /// 状态判定:ResultRaw 第一个字符是 N → NG,Y → OK,其他原样保留。
     /// </summary>
     public class DetectionRecord
     {
@@ -18,7 +22,7 @@ namespace CCS_Traceback
         /// <summary>第 1 个结果的原始值(原始大小写都可能出现)。</summary>
         public string ResultRaw { get; set; }
 
-        /// <summary>原因 / 缺陷描述(可能为空)。</summary>
+        /// <summary>原因 / 缺陷描述(可能为空,可能含 , 等)。</summary>
         public string Reason { get; set; }
 
         /// <summary>检测时间。</summary>
@@ -63,14 +67,10 @@ namespace CCS_Traceback
         /// </summary>
         public string FileReason { get; set; }
 
-        /// <summary>
-        /// 文件绝对路径(扫描后填)。CSV 行这个字段为空。
-        /// </summary>
+        /// <summary>文件绝对路径(扫描后填)。CSV 行这个字段为空。</summary>
         public string FilePath { get; set; }
 
-        /// <summary>
-        /// 仅文件名(不含目录),供表格展示。CSV 行这个字段为空。
-        /// </summary>
+        /// <summary>仅文件名(不含目录),供表格展示。CSV 行这个字段为空。</summary>
         public string FileName { get; set; }
     }
 }

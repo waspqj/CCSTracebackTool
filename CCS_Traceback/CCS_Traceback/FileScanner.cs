@@ -6,32 +6,14 @@ using System.Linq;
 namespace CCS_Traceback
 {
     /// <summary>
-    /// 给定一个产品(QR + Alias + 日期),扫 NGImgSave 下的实际存在的 NG 错图:
+    /// 给定一个产品(QR + Alias + 日期),扫 NGImgSave 下的实际存在的 NG 错图文件,
+    /// 返回按时间排序的 DetectionRecord 列表(FilePath / FileReason / ProcessName / Time 都填好)。
     ///
-    ///   A 派(完整 4 层):
-    ///   {NGImgSave}
-    ///     └─ {yyyy-MM / yyyy_MM}      ← 当月目录(横线或下划线)
-    ///         └─ {yyyy-MM-dd / yyyy_MM_dd}  ← 当天目录(同上)
-    ///             └─ {QR 或 "0"}      ← 产品二维码目录
-    ///                 └─ {processName} ← 流程名目录
-    ///                     └─ *.bmp / *.jpg
+    /// 现场目录有 2 派,按"当月目录是否存在"区分:
+    ///   A 派(完整 4 层):{NGImgSave}/{yyyy-MM or yyyy_MM}/{yyyy-MM-dd or yyyy_MM_dd}/{QR or "0"}/{processName}/*.bmp|jpg
+    ///   B 派(3 层,无月份层):{NGImgSave}/{yyyy-MM-dd or yyyy_MM_dd}/{QR or "0"}/{processName}/*.bmp|jpg
     ///
-    ///   B 派(3 层,没有月份层):
-    ///   {NGImgSave}
-    ///     └─ {yyyy-MM-dd / yyyy_MM_dd}
-    ///         └─ {QR 或 "0"}
-    ///             └─ {processName}
-    ///                 └─ *.bmp / *.jpg
-    ///
-    /// 日期目录命名兼容横线和下划线两种,共 6 种候选:
-    ///   {yyyy-MM}/{yyyy-MM-dd}、{yyyy-MM}/{yyyy_MM_dd}、
-    ///   {yyyy_MM}/{yyyy-MM-dd}、{yyyy_MM}/{yyyy_MM_dd}、
-    ///   {yyyy-MM-dd}、{yyyy_MM_dd}
-    /// 第一个存在的目录胜出,都不在才返空 —— 见 TryFindDayDir。
-    ///
-    /// 4 种 NG 来源目录层一致,文件名模板不一致,但都按"最后一个 _ 切原因段"思路解析。
-    /// QR 在 NGImgSave 里不会被清洗,目录名可能含 \ / : * ? " < > | 等 → 用 DirectoryInfo 拿目录名,
-    /// 比较时容错忽略这些字符。
+    /// 日期目录命名兼容横线和下划线 2 种,共 6 种候选。第一个存在的目录胜出。
     /// </summary>
     public static class FileScanner
     {
@@ -39,26 +21,14 @@ namespace CCS_Traceback
 
         /// <summary>
         /// 给定根目录 + 日期,挑出第一个实际存在的当天日期目录。
-        /// 现场日期层命名有 6 种可能组合,按下面的优先级匹配:
-        ///
-        ///   有月份层(4 种,ym × ymd 组合):
-        ///     {yyyy-MM}/{yyyy-MM-dd}
-        ///     {yyyy-MM}/{yyyy_MM_dd}
-        ///     {yyyy_MM}/{yyyy-MM-dd}
-        ///     {yyyy_MM}/{yyyy_MM_dd}
-        ///
-        ///   无月份层(2 种):
-        ///     {yyyy-MM-dd}
-        ///     {yyyy_MM_dd}
-        ///
-        /// 任一组合存在即返回,都不在返回 null。
+        /// 6 种候选(4 种带月份层 + 2 种不带月份层),都不在返回 null。
         /// 给主窗"占位行的期望路径"展示用,也给 Scan 用。
         /// </summary>
         public static string TryFindDayDir(string ngImgSaveRoot, DateTime date)
         {
             if (string.IsNullOrWhiteSpace(ngImgSaveRoot)) return null;
-            string ymDash = date.ToString("yyyy-MM");
-            string ymUs   = date.ToString("yyyy_MM");
+            string ymDash  = date.ToString("yyyy-MM");
+            string ymUs    = date.ToString("yyyy_MM");
             string ymdDash = date.ToString("yyyy-MM-dd");
             string ymdUs   = date.ToString("yyyy_MM_dd");
 
@@ -80,11 +50,8 @@ namespace CCS_Traceback
 
         /// <summary>
         /// 扫指定产品当天产生的所有 NG 错图文件。
+        /// alias 在文件系统层面无法过滤 —— 由调用方用 CSV 时间戳做反向归属。
         /// </summary>
-        /// <param name="qr">二维码原文</param>
-        /// <param name="alias">编号</param>
-        /// <param name="date">当天日期</param>
-        /// <param name="ngImgSaveRoot">NG 错图根目录</param>
         public static List<DetectionRecord> Scan(
             string qr, string alias, DateTime date, string ngImgSaveRoot)
         {
@@ -92,15 +59,15 @@ namespace CCS_Traceback
             if (string.IsNullOrWhiteSpace(ngImgSaveRoot)) return result;
             if (string.IsNullOrWhiteSpace(qr)) return result;
 
-            // 6 种路径形态(ym / ymd 各 dash 或 underscore 组合)兼容 —— 走 TryFindDayDir
+            // 1. 找当天日期目录
             string dayDir = TryFindDayDir(ngImgSaveRoot, date);
             if (dayDir == null) return result;
 
-            // 找当天目录下匹配 QR 的子目录(容错:目录名可能含非法字符或带前后缀)
+            // 2. 找当天目录下匹配 QR 的子目录(容错:目录名可能含非法字符或带前后缀)
             string qrDir = FindQrDir(dayDir, qr);
             if (qrDir == null) return result;
 
-            // 每个 processName 子目录里递归一层文件
+            // 3. 每个 processName 子目录里递归一层图像文件
             foreach (var procDir in SafeEnumerateDirectories(qrDir))
             {
                 string procName = Path.GetFileName(procDir);
@@ -117,24 +84,21 @@ namespace CCS_Traceback
                 }
             }
 
-            // 按时间排序(无时间戳的排在最后)
-            result = result
+            // 4. 按时间排序(无时间戳的排到最后)
+            return result
                 .OrderBy(r => r.Time == default ? DateTime.MaxValue : r.Time)
                 .ToList();
-
-            return result;
         }
 
         /// <summary>
         /// 在 dayDir 下找一个与 qr 等价的子目录名 —— NGImgSave 现场不洗 QR,
-        /// 可能直接是 qr,也可能在 qr 旁带前后缀,也可能用 "0" 表示空 QR。
-        /// 匹配策略:目录名经过去前后空格 + 去尾部单边括号后 == qr(忽略空 QR 与 "0" 的等价)。
+        /// 可能直接是 qr,也可能在 qr 旁带前后缀;空 QR 用 "0" 表示。
+        /// 匹配策略:目录名规范化后 == qr(忽略空 QR 与 "0" 的等价)。
         /// </summary>
         private static string FindQrDir(string dayDir, string qr)
         {
             string normQr = NormalizeDirName(qr);
             string emptySentinel = "0";
-            // 空 QR / 用户没填 → 找 "0" 这个目录
             bool wantEmpty = string.IsNullOrWhiteSpace(normQr) || normQr == "_";
 
             foreach (var d in SafeEnumerateDirectories(dayDir))
@@ -155,7 +119,7 @@ namespace CCS_Traceback
                 foreach (var d in SafeEnumerateDirectories(dayDir))
                 {
                     string name = NormalizeDirName(Path.GetFileName(d));
-                    if (string.IsNullOrEmpty(name)) return d;
+                    if (!string.IsNullOrEmpty(name)) return d;
                 }
             }
 
@@ -163,7 +127,7 @@ namespace CCS_Traceback
         }
 
         /// <summary>
-        /// 目录名容错规范化:去前后空白、去末尾成对的括号注记、统一大小写。
+        /// 目录名容错规范化:去前后空白、去末尾成对的括号注记。
         /// 不剔除中间字符 —— QR 自身可能含奇怪字符,我们要的是"原样相等"。
         /// </summary>
         private static string NormalizeDirName(string s)
@@ -173,9 +137,9 @@ namespace CCS_Traceback
         }
 
         /// <summary>
-        /// 由基本 DetectionRecord 实例派生文件行所需的展示字段(时间戳从文件名拿)。
-        /// 用扫描时的 date(用户选定的日期)当基准 + 文件名抽出的时分秒,这样 Time.Year
-        /// 与 CSV 行 Time.Year 一致,MainForm 那边 10 分钟差比对才能成立。
+        /// 由 DetectionRecord 实例派生文件行所需的展示字段(时间戳从文件名拿)。
+        /// 用扫描时的 date 当基准 + 文件名抽出的时分秒 —— Time.Year 与 CSV 行 Time.Year 一致,
+        /// 主窗的 10 分钟差比对才能成立。
         /// 解析失败则退回 date 当天 00:00:00(自然被 10 分钟阈值筛掉,不污染列表)。
         /// </summary>
         private static DetectionRecord NewFileRecord(string qr, string alias, DateTime date, string fullPath)
@@ -194,17 +158,13 @@ namespace CCS_Traceback
             };
         }
 
-        // 文件名解析:统一锚定最后一个 _ ,按其后剩几位判断时间戳格式:
-        //   - 剩 4 位 → HHmmss_ffff,reason 在 lastUnderscore 之前 7 位之前
-        //   - 剩 6 位 → HHmmss(无毫秒段),reason 在 lastUnderscore 之前
-        // 都不匹配则整段兜底当 reason,Time 退回当天日期。
-        //
-        // ① 类 Camera9_{i}_{HHmmss}.jpg 文件名里没有原因段 → 用 processName 兜底。
-        //
-        // 现场相机写文件名时常加 {序号}_ 前缀(例 10_焊点焊穿,焊点偏移_030527_4143),
-        // 这个序号没业务含义,要剥掉再切。侧面相机无该前缀,跳过即可。
-        //
-        // 原因段可能残留下英文逗号 "," 或中文逗号 "," → TrimEnd 清理。
+        /// <summary>
+        /// 文件名解析 → 错误原因段。
+        /// 统一锚定最后一个 _ ,按其后剩几位判断时间戳格式:
+        ///   - 剩 4 位 → HHmmss_ffff,reason 在 lastUnderscore 之前 7 位之前
+        ///   - 剩 6 位 → HHmmss(无毫秒段),reason 在 lastUnderscore 之前
+        /// 都不匹配 → 整段兜底当 reason,Time 退回当天日期。
+        /// </summary>
         private static string ParseNgReason(string fnameNoExt, string processName)
         {
             if (string.IsNullOrEmpty(fnameNoExt)) return processName;
@@ -212,21 +172,17 @@ namespace CCS_Traceback
             // ① 类:Camera9_{i}_{HHmmss}.jpg — 文件名以 Camera9_ 开头,第二段是相机序号,
             // 没有原因段。直接用 processName 兜底。
             if (fnameNoExt.StartsWith("Camera9_", StringComparison.OrdinalIgnoreCase))
-            {
                 return processName;
-            }
 
-            // 剥掉开头的 {数字}_ 前缀
+            // 现场相机写文件名时常加 {序号}_ 前缀(例 10_焊点焊穿,焊点偏移_030527_4143),
+            // 这个序号没业务含义,要剥掉再切。侧面相机无该前缀,跳过即可。
             fnameNoExt = StripLeadingSeq(fnameNoExt);
             if (string.IsNullOrEmpty(fnameNoExt)) return processName;
 
             // 锚定最后一个 _
             int lastUnderscore = fnameNoExt.LastIndexOf('_');
             if (lastUnderscore < 0)
-            {
-                // 没有任何 "_" —— 整段当原因
-                return CleanReason(fnameNoExt);
-            }
+                return CleanReason(fnameNoExt);   // 没有任何 "_" —— 整段当原因
 
             string tail = fnameNoExt.Substring(lastUnderscore + 1);
 
@@ -246,17 +202,13 @@ namespace CCS_Traceback
 
             // 情形 2:HHmmss —— 尾部恰好 6 位数字
             if (tail.Length == 6 && tail.All(char.IsDigit))
-            {
                 return CleanReason(fnameNoExt.Substring(0, lastUnderscore));
-            }
 
             // 都对不上 → 整段兜底
             return CleanReason(fnameNoExt);
         }
 
-        /// <summary>
-        /// 去掉原因段尾部残留的英文 / 中文逗号(主程序 TrimEnd(',') 只去英文逗号)。
-        /// </summary>
+        // 去掉原因段尾部残留的英文 / 中文逗号、主程序 TrimEnd(',') 只去英文逗号。
         private static string CleanReason(string s)
         {
             if (string.IsNullOrEmpty(s)) return s;
@@ -278,10 +230,12 @@ namespace CCS_Traceback
             return s;
         }
 
-        // 文件名里抽时间戳:
-        //   - 末尾形如 HHmmss_ffff:中间下划线在倒数第 5 位(6 位 HHmmss + 1 位 _ + 4 位 ffff)
-        //   - 退回末尾 6 位纯数字 → HHmmss
-        // 找不到就 null(让 NewFileRecord 退回当天日期)。
+        /// <summary>
+        /// 文件名里抽时间戳:
+        ///   - 末尾形如 HHmmss_ffff:中间下划线在倒数第 5 位(6 位 HHmmss + 1 位 _ + 4 位 ffff)
+        ///   - 退回末尾 6 位纯数字 → HHmmss
+        /// 找不到就 null(让 NewFileRecord 退回当天日期)。
+        /// </summary>
         private static DateTime? ParseTimeFromFileName(string fname)
         {
             if (string.IsNullOrEmpty(fname)) return null;
@@ -291,7 +245,6 @@ namespace CCS_Traceback
             if (string.IsNullOrEmpty(body)) return null;
 
             // 优先匹配 HHmmss_ffff:整段至少 11 位,倒数第 5 位必须是 _
-            // (HHmmss 6 位 + _ 1 位 + ffff 4 位 = 11 位,_ 落在 length-5)
             if (body.Length >= 11 && body[body.Length - 5] == '_')
             {
                 string hms = body.Substring(body.Length - 11, 6);
@@ -313,6 +266,7 @@ namespace CCS_Traceback
             return null;
         }
 
+        // HHmmss 解析:基本 + 范围校验。
         private static bool TryParseHms(string s, out DateTime t)
         {
             t = default;
@@ -325,6 +279,7 @@ namespace CCS_Traceback
             return true;
         }
 
+        // 目录 / 文件枚举时遇到权限问题就当空,不让整个扫描崩。
         private static IEnumerable<string> SafeEnumerateDirectories(string dir)
         {
             try { return Directory.EnumerateDirectories(dir).ToList(); }

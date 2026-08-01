@@ -5,6 +5,11 @@ using System.Windows.Forms;
 
 namespace CCS_Traceback
 {
+    /// <summary>
+    /// "按二维码统计" 子窗体:展示主窗已载入的全部记录(不做时间过滤,不去重)。
+    /// 双击某行 → 触发 RowActivated(qr, alias) 事件,由主窗 SelectQrAndAlias 接住,
+    /// 把主窗 cboQr/cboAlias 选上并顶上来,主窗不开新窗。
+    /// </summary>
     public partial class QrStatisticsForm : Form
     {
         private readonly DateTime _start;
@@ -13,7 +18,7 @@ namespace CCS_Traceback
 
         /// <summary>
         /// 双击某一行时触发。参数:(qrCode, alias)。
-        /// 主窗体订阅这个事件即可把对应二维码 / 编号选中并把主窗体顶上来。
+        /// 主窗订阅这个事件即可把对应二维码 / 编号选中并把主窗顶上来。
         /// </summary>
         public event Action<string, string> RowActivated;
 
@@ -38,6 +43,8 @@ namespace CCS_Traceback
             RowActivated?.Invoke(r.QrCode, r.Alias);
         }
 
+        // 把全部记录铺到 dgvResults(4 列:编号 / 时间 / 二维码 / 状态)。
+        // 状态列:NG 时拼缺陷类型,OK 时 "OK",其他原样保留。
         private void QrStatisticsForm_Load(object sender, EventArgs e)
         {
             int total = _records.Count;
@@ -45,7 +52,6 @@ namespace CCS_Traceback
             int ng = _records.Count(r => r.IsNg);
             this.Text = $"按二维码统计 — 共 {total} 条 (OK {ok} / NG {ng})";
 
-            // 一条记录一行:编号 / 时间 / 二维码 / 状态(NG 时把缺陷类型拼上)
             dgvResults.Rows.Clear();
             foreach (var r in _records)
             {

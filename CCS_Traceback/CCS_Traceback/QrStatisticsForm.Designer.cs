@@ -1,5 +1,9 @@
 namespace CCS_Traceback
 {
+    /// <summary>
+    /// QrStatisticsForm 设计器生成的代码块:dgvResults(4 列:编号 / 时间 / 二维码 / 状态)。
+    /// 业务逻辑在 QrStatisticsForm.cs。
+    /// </summary>
     partial class QrStatisticsForm
     {
         /// <summary>

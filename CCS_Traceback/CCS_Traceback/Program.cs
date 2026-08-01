@@ -1,13 +1,13 @@
-﻿using System;
+using System;
 using System.Windows.Forms;
 
 namespace CCS_Traceback
 {
+    /// <summary>
+    /// 应用程序入口:启用视觉样式 + 启动 MainForm。
+    /// </summary>
     internal static class Program
     {
-        /// <summary>
-        /// 应用程序的主入口点。
-        /// </summary>
         [STAThread]
         static void Main()
         {

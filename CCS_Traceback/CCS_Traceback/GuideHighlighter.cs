@@ -20,7 +20,7 @@ namespace CCS_Traceback
 
         // 闪烁参数
         private const int FlashIntervalMs = 150;
-        private const int FlashHalfCycles = 4;
+        private const int FlashHalfCycles = 4;     // 4 个半周期 = 2 次完整闪烁(每半周期是绿或原色)
         private static readonly Color FlashColor = Color.FromArgb(76, 175, 80);   // Material Green 500
 
         public GuideHighlighter()
@@ -61,6 +61,7 @@ namespace CCS_Traceback
             Clear();
         }
 
+        // 闪烁节奏:奇数 tick 切回原色,偶数 tick 设绿;达到 FlashHalfCycles 后稳定在绿色。
         private void Flash_Tick(object sender, EventArgs e)
         {
             if (_currentTarget == null || _currentTarget.IsDisposed)
@@ -72,13 +73,11 @@ namespace CCS_Traceback
             _flashTick++;
             if (_flashTick >= FlashHalfCycles)
             {
-                // 闪烁结束,稳定在绿色
                 _currentTarget.BackColor = FlashColor;
                 _flash.Stop();
                 return;
             }
 
-            // 切换:奇数 → 原色,偶数 → 绿色(已经第 1 帧设绿)
             _currentTarget.BackColor = (_flashTick % 2 == 0) ? FlashColor : _originalColor;
         }
     }
