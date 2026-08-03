@@ -5,22 +5,15 @@ using System.Windows.Forms;
 
 namespace CCS_Traceback
 {
-    /// <summary>
-    /// "按二维码统计" 子窗体:展示主窗已载入的全部记录(不做时间过滤,不去重)。
-    /// 双击某行 → 触发 RowActivated(qr, alias) 事件,由主窗 SelectQrAndAlias 接住,
-    /// 把主窗 cboQr/cboAlias 选上并顶上来,主窗不开新窗。
-    /// </summary>
+    /// <summary>"按二维码统计" 子窗体:展示主窗已载入的全部记录(不做时间过滤,不去重)。双击行 → 触发主窗 ScanQr(qr)。</summary>
     public partial class QrStatisticsForm : Form
     {
         private readonly DateTime _start;
         private readonly DateTime _end;
         private readonly List<DetectionRecord> _records;
 
-        /// <summary>
-        /// 双击某一行时触发。参数:(qrCode, alias)。
-        /// 主窗订阅这个事件即可把对应二维码 / 编号选中并把主窗顶上来。
-        /// </summary>
-        public event Action<string, string> RowActivated;
+        /// <summary>双击某行时回调,参数:qrCode。由主窗在打开本窗时注入。</summary>
+        public Action<string> ScanQr;
 
         public QrStatisticsForm(DateTime start, DateTime end, List<DetectionRecord> records)
         {
@@ -32,19 +25,14 @@ namespace CCS_Traceback
             this.dgvResults.CellDoubleClick += dgvResults_CellDoubleClick;
         }
 
-        /// <summary>
-        /// 双击行 → 通知订阅方。_records 的填表顺序和 dgvResults 行索引一一对应,
-        /// 所以可以直接用 e.RowIndex 索引回原始记录。
-        /// </summary>
+        /// <summary>_records 的填表顺序和 dgvResults 行索引一一对应,所以直接用 e.RowIndex 索引回原始记录。</summary>
         private void dgvResults_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0 || e.RowIndex >= _records.Count) return;
-            var r = _records[e.RowIndex];
-            RowActivated?.Invoke(r.QrCode, r.Alias);
+            ScanQr?.Invoke(_records[e.RowIndex].QrCode);
         }
 
-        // 把全部记录铺到 dgvResults(4 列:编号 / 时间 / 二维码 / 状态)。
-        // 状态列:NG 时拼缺陷类型,OK 时 "OK",其他原样保留。
+        // 把全部记录铺到 dgvResults(4 列:编号 / 时间 / 二维码 / 状态)。NG 拼缺陷类型,OK "OK",其他原样保留。
         private void QrStatisticsForm_Load(object sender, EventArgs e)
         {
             int total = _records.Count;
@@ -62,26 +50,14 @@ namespace CCS_Traceback
                     string reasonJoined = string.Join(" | ", defects);
                     status = string.IsNullOrEmpty(reasonJoined) ? "NG" : "NG - " + reasonJoined;
                 }
-                else if (r.IsOk)
-                {
-                    status = "OK";
-                }
-                else
-                {
-                    status = r.ResultRaw ?? "";
-                }
+                else if (r.IsOk) status = "OK";
+                else status = r.ResultRaw ?? "";
 
-                dgvResults.Rows.Add(
-                    r.Alias,
-                    r.Time.ToString("yyyy-MM-dd HH:mm:ss"),
-                    r.QrCode,
-                    status);
+                dgvResults.Rows.Add(r.Alias, r.Time.ToString("yyyy-MM-dd HH:mm:ss"), r.QrCode, status);
             }
 
             if (dgvResults.Rows.Count == 0)
-            {
                 dgvResults.Rows.Add("—", "—", "(无数据)", "请先在主界面点 \"更新数据\"");
-            }
         }
     }
 }

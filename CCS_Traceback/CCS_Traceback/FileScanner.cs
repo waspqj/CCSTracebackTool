@@ -181,23 +181,16 @@ namespace CCS_Traceback
 
             // 锚定最后一个 _
             int lastUnderscore = fnameNoExt.LastIndexOf('_');
-            if (lastUnderscore < 0)
-                return CleanReason(fnameNoExt);   // 没有任何 "_" —— 整段当原因
+            if (lastUnderscore < 0) return CleanReason(fnameNoExt);   // 没有任何 "_" —— 整段当原因
 
             string tail = fnameNoExt.Substring(lastUnderscore + 1);
 
             // 情形 1:HHmmss_ffff —— 尾部恰好 4 位数字
-            if (tail.Length == 4 && tail.All(char.IsDigit))
+            if (tail.Length == 4 && tail.All(char.IsDigit) && lastUnderscore >= 6)
             {
-                if (lastUnderscore >= 6)
-                {
-                    string hms = fnameNoExt.Substring(lastUnderscore - 6, 6);
-                    if (hms.All(char.IsDigit))
-                    {
-                        // reason 是 lastUnderscore - 6 之前的整段(连同 HHmmss 一起剥掉)
-                        return CleanReason(fnameNoExt.Substring(0, lastUnderscore - 6));
-                    }
-                }
+                string hms = fnameNoExt.Substring(lastUnderscore - 6, 6);
+                if (hms.All(char.IsDigit))
+                    return CleanReason(fnameNoExt.Substring(0, lastUnderscore - 6));
             }
 
             // 情形 2:HHmmss —— 尾部恰好 6 位数字
@@ -233,7 +226,10 @@ namespace CCS_Traceback
         /// <summary>
         /// 文件名里抽时间戳:
         ///   - 末尾形如 HHmmss_ffff:中间下划线在倒数第 5 位(6 位 HHmmss + 1 位 _ + 4 位 ffff)
-        ///   - 退回末尾 6 位纯数字 → HHmmss
+        ///     ffff 是相机写入的 4 位毫秒值(0000-9999,允许跨秒);
+        ///     整体作毫秒加到秒上,由 AddMilliseconds 自动处理进位。
+        ///     例 "030527_4143" → 03:05:31.143(进位 4 秒)。
+        ///   - 退回末尾 6 位纯数字 → HHmmss(无毫秒段,毫秒 = 0)
         /// 找不到就 null(让 NewFileRecord 退回当天日期)。
         /// </summary>
         private static DateTime? ParseTimeFromFileName(string fname)
@@ -252,7 +248,9 @@ namespace CCS_Traceback
                 if (hms.All(char.IsDigit) && fff.All(char.IsDigit)
                     && TryParseHms(hms, out var t))
                 {
-                    return t;
+                    // ffff 整体作毫秒(0000-9999,可跨秒):AddMilliseconds 自动进位到秒/分
+                    int frame = int.Parse(fff);
+                    return t.AddMilliseconds(frame);
                 }
             }
 

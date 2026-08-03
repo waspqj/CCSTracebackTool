@@ -5,33 +5,22 @@ using System.Windows.Forms;
 namespace CCS_Traceback
 {
     /// <summary>
-    /// 引导式高亮:目标控件的 BackColor 闪绿 2 下(共 ~1 秒),然后保持绿色,
-    /// 直到 Clear() 被调用(切到下一目标时由调用方 Clear 还原原色)。
-    ///
-    /// 只服务于 3 个主按钮(btnUpdate / btnQrStatistics / btnScanFiles)的提示,
-    /// 不弹不闪其它控件。
+    /// 引导式高亮:目标控件 BackColor 闪绿 2 下(共 ~1 秒)后保持绿色,Clear() 还原原色。
+    /// 只服务于 2 个主按钮(btnUpdate / btnQrStatistics)的提示。
     /// </summary>
     public sealed class GuideHighlighter : IDisposable
     {
-        private readonly System.Windows.Forms.Timer _flash;
+        private readonly System.Windows.Forms.Timer _flash = new System.Windows.Forms.Timer { Interval = FlashIntervalMs };
         private Control _currentTarget;
         private Color _originalColor;
         private int _flashTick;
 
-        // 闪烁参数
         private const int FlashIntervalMs = 150;
-        private const int FlashHalfCycles = 4;     // 4 个半周期 = 2 次完整闪烁(每半周期是绿或原色)
+        private const int FlashHalfCycles = 4;     // 4 个半周期 = 2 次完整闪烁
         private static readonly Color FlashColor = Color.FromArgb(76, 175, 80);   // Material Green 500
 
-        public GuideHighlighter()
-        {
-            _flash = new System.Windows.Forms.Timer { Interval = FlashIntervalMs };
-            _flash.Tick += Flash_Tick;
-        }
+        public GuideHighlighter() { _flash.Tick += Flash_Tick; }
 
-        /// <summary>
-        /// 高亮指定控件:记录原色,闪绿 2 下后保持绿色。
-        /// </summary>
         public void Highlight(Control target)
         {
             Clear();
@@ -39,12 +28,10 @@ namespace CCS_Traceback
             _currentTarget = target;
             _originalColor = target.BackColor;
             _flashTick = 0;
-            // 第一帧立即设绿(不等 Timer)
-            target.BackColor = FlashColor;
+            target.BackColor = FlashColor;   // 第一帧立即设绿(不等 Timer)
             _flash.Start();
         }
 
-        /// <summary>清除当前高亮:还原 BackColor 到原色,停 Timer。</summary>
         public void Clear()
         {
             _flash.Stop();
@@ -54,22 +41,12 @@ namespace CCS_Traceback
             _flashTick = 0;
         }
 
-        public void Dispose()
-        {
-            _flash?.Stop();
-            _flash?.Dispose();
-            Clear();
-        }
+        public void Dispose() { _flash?.Stop(); _flash?.Dispose(); Clear(); }
 
         // 闪烁节奏:奇数 tick 切回原色,偶数 tick 设绿;达到 FlashHalfCycles 后稳定在绿色。
         private void Flash_Tick(object sender, EventArgs e)
         {
-            if (_currentTarget == null || _currentTarget.IsDisposed)
-            {
-                Clear();
-                return;
-            }
-
+            if (_currentTarget == null || _currentTarget.IsDisposed) { Clear(); return; }
             _flashTick++;
             if (_flashTick >= FlashHalfCycles)
             {
@@ -77,7 +54,6 @@ namespace CCS_Traceback
                 _flash.Stop();
                 return;
             }
-
             _currentTarget.BackColor = (_flashTick % 2 == 0) ? FlashColor : _originalColor;
         }
     }

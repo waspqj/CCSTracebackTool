@@ -37,14 +37,12 @@ namespace CCS_Traceback
             this.colNgPath = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.lblNgList = new System.Windows.Forms.Label();
             this.pnlFilters = new System.Windows.Forms.Panel();
-            this.lblFilterDefect = new System.Windows.Forms.Label();
-            this.cboDefect = new System.Windows.Forms.ComboBox();
-            this.lblFilterAlias = new System.Windows.Forms.Label();
-            this.cboAlias = new System.Windows.Forms.ComboBox();
-            this.lblFilterQr = new System.Windows.Forms.Label();
-            this.cboQr = new System.Windows.Forms.ComboBox();
+            this.dgvQrMatches = new System.Windows.Forms.DataGridView();
+            this.colMatchQr = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colMatchCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.txtQrSearch = new System.Windows.Forms.TextBox();
+            this.lblQrSearch = new System.Windows.Forms.Label();
             this.btnQrStatistics = new System.Windows.Forms.Button();
-            this.btnScanFiles = new System.Windows.Forms.Button();
             this.btnUpdate = new System.Windows.Forms.Button();
             this.pnlTime = new System.Windows.Forms.Panel();
             this.label1 = new System.Windows.Forms.Label();
@@ -64,7 +62,7 @@ namespace CCS_Traceback
             this.lblImgTime = new System.Windows.Forms.Label();
             this.pnlImageBox = new System.Windows.Forms.Panel();
             this.txtImageTextPreview = new System.Windows.Forms.TextBox();
-            this.picImagePreview = new System.Windows.Forms.PictureBox();
+            this.picImagePreview = new Cyotek.Windows.Forms.ImageBox();
             this.lblImagePlaceholder = new System.Windows.Forms.Label();
             this.pnlStats = new System.Windows.Forms.Panel();
             this.lblStatsText = new System.Windows.Forms.Label();
@@ -77,14 +75,13 @@ namespace CCS_Traceback
             this.splitMain.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvNgList)).BeginInit();
             this.pnlFilters.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvQrMatches)).BeginInit();
             this.pnlTime.SuspendLayout();
             this.tlpRight.SuspendLayout();
             this.pnlImageInfo.SuspendLayout();
             this.pnlImageBox.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.picImagePreview)).BeginInit();
             this.pnlStats.SuspendLayout();
             this.pnlChartPanel.SuspendLayout();
-            this.pnlChartBox.SuspendLayout();
             this.SuspendLayout();
             // 
             // splitMain
@@ -101,7 +98,6 @@ namespace CCS_Traceback
             this.splitMain.Panel1.Controls.Add(this.lblNgList);
             this.splitMain.Panel1.Controls.Add(this.pnlFilters);
             this.splitMain.Panel1.Controls.Add(this.btnQrStatistics);
-            this.splitMain.Panel1.Controls.Add(this.btnScanFiles);
             this.splitMain.Panel1.Controls.Add(this.btnUpdate);
             this.splitMain.Panel1.Controls.Add(this.pnlTime);
             this.splitMain.Panel1.Padding = new System.Windows.Forms.Padding(15, 13, 15, 13);
@@ -128,7 +124,7 @@ namespace CCS_Traceback
             this.colNgReason,
             this.colNgPath});
             this.dgvNgList.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgvNgList.Location = new System.Drawing.Point(15, 589);
+            this.dgvNgList.Location = new System.Drawing.Point(15, 539);
             this.dgvNgList.Margin = new System.Windows.Forms.Padding(0);
             this.dgvNgList.MultiSelect = false;
             this.dgvNgList.Name = "dgvNgList";
@@ -137,7 +133,7 @@ namespace CCS_Traceback
             this.dgvNgList.RowHeadersWidth = 62;
             this.dgvNgList.RowTemplate.Height = 24;
             this.dgvNgList.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgvNgList.Size = new System.Drawing.Size(740, 575);
+            this.dgvNgList.Size = new System.Drawing.Size(740, 625);
             this.dgvNgList.TabIndex = 5;
             this.dgvNgList.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvNgList_CellDoubleClick);
             // 
@@ -187,7 +183,7 @@ namespace CCS_Traceback
             this.lblNgList.AutoSize = true;
             this.lblNgList.Dock = System.Windows.Forms.DockStyle.Top;
             this.lblNgList.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F);
-            this.lblNgList.Location = new System.Drawing.Point(15, 543);
+            this.lblNgList.Location = new System.Drawing.Point(15, 493);
             this.lblNgList.Margin = new System.Windows.Forms.Padding(0, 6, 0, 0);
             this.lblNgList.Name = "lblNgList";
             this.lblNgList.Padding = new System.Windows.Forms.Padding(0, 10, 0, 5);
@@ -197,95 +193,87 @@ namespace CCS_Traceback
             // 
             // pnlFilters
             // 
-            this.pnlFilters.Controls.Add(this.lblFilterDefect);
-            this.pnlFilters.Controls.Add(this.cboDefect);
-            this.pnlFilters.Controls.Add(this.lblFilterAlias);
-            this.pnlFilters.Controls.Add(this.cboAlias);
-            this.pnlFilters.Controls.Add(this.lblFilterQr);
-            this.pnlFilters.Controls.Add(this.cboQr);
+            this.pnlFilters.Controls.Add(this.dgvQrMatches);
+            this.pnlFilters.Controls.Add(this.txtQrSearch);
+            this.pnlFilters.Controls.Add(this.lblQrSearch);
             this.pnlFilters.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pnlFilters.Location = new System.Drawing.Point(15, 263);
+            this.pnlFilters.Location = new System.Drawing.Point(15, 213);
             this.pnlFilters.Margin = new System.Windows.Forms.Padding(0, 6, 0, 0);
             this.pnlFilters.Name = "pnlFilters";
             this.pnlFilters.Size = new System.Drawing.Size(740, 280);
             this.pnlFilters.TabIndex = 3;
             // 
-            // lblFilterDefect
+            // dgvQrMatches
             // 
-            this.lblFilterDefect.AutoSize = true;
-            this.lblFilterDefect.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F);
-            this.lblFilterDefect.Location = new System.Drawing.Point(5, 184);
-            this.lblFilterDefect.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.lblFilterDefect.Name = "lblFilterDefect";
-            this.lblFilterDefect.Size = new System.Drawing.Size(116, 31);
-            this.lblFilterDefect.TabIndex = 4;
-            this.lblFilterDefect.Text = "缺陷类型:";
-            // 
-            // cboDefect
-            // 
-            this.cboDefect.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.dgvQrMatches.AllowUserToAddRows = false;
+            this.dgvQrMatches.AllowUserToDeleteRows = false;
+            this.dgvQrMatches.AllowUserToResizeRows = false;
+            this.dgvQrMatches.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.cboDefect.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cboDefect.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F);
-            this.cboDefect.Location = new System.Drawing.Point(5, 220);
-            this.cboDefect.Margin = new System.Windows.Forms.Padding(4);
-            this.cboDefect.Name = "cboDefect";
-            this.cboDefect.Size = new System.Drawing.Size(726, 39);
-            this.cboDefect.TabIndex = 5;
+            this.dgvQrMatches.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvQrMatches.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.colMatchQr,
+            this.colMatchCount});
+            this.dgvQrMatches.Location = new System.Drawing.Point(5, 90);
+            this.dgvQrMatches.Margin = new System.Windows.Forms.Padding(4);
+            this.dgvQrMatches.MultiSelect = false;
+            this.dgvQrMatches.Name = "dgvQrMatches";
+            this.dgvQrMatches.ReadOnly = true;
+            this.dgvQrMatches.RowHeadersVisible = false;
+            this.dgvQrMatches.RowHeadersWidth = 62;
+            this.dgvQrMatches.RowTemplate.Height = 24;
+            this.dgvQrMatches.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dgvQrMatches.Size = new System.Drawing.Size(726, 180);
+            this.dgvQrMatches.TabIndex = 2;
+            this.dgvQrMatches.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvQrMatches_CellDoubleClick);
             // 
-            // lblFilterAlias
+            // colMatchQr
             // 
-            this.lblFilterAlias.AutoSize = true;
-            this.lblFilterAlias.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F);
-            this.lblFilterAlias.Location = new System.Drawing.Point(5, 96);
-            this.lblFilterAlias.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.lblFilterAlias.Name = "lblFilterAlias";
-            this.lblFilterAlias.Size = new System.Drawing.Size(68, 31);
-            this.lblFilterAlias.TabIndex = 2;
-            this.lblFilterAlias.Text = "编号:";
+            this.colMatchQr.HeaderText = "二维码";
+            this.colMatchQr.MinimumWidth = 8;
+            this.colMatchQr.Name = "colMatchQr";
+            this.colMatchQr.ReadOnly = true;
+            this.colMatchQr.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.colMatchQr.Width = 450;
             // 
-            // cboAlias
+            // colMatchCount
             // 
-            this.cboAlias.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.colMatchCount.HeaderText = "条数";
+            this.colMatchCount.MinimumWidth = 8;
+            this.colMatchCount.Name = "colMatchCount";
+            this.colMatchCount.ReadOnly = true;
+            this.colMatchCount.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.colMatchCount.Width = 80;
+            // 
+            // txtQrSearch
+            // 
+            this.txtQrSearch.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.cboAlias.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cboAlias.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F);
-            this.cboAlias.Location = new System.Drawing.Point(5, 132);
-            this.cboAlias.Margin = new System.Windows.Forms.Padding(4);
-            this.cboAlias.Name = "cboAlias";
-            this.cboAlias.Size = new System.Drawing.Size(726, 39);
-            this.cboAlias.TabIndex = 3;
+            this.txtQrSearch.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F);
+            this.txtQrSearch.Location = new System.Drawing.Point(5, 44);
+            this.txtQrSearch.Margin = new System.Windows.Forms.Padding(4);
+            this.txtQrSearch.Name = "txtQrSearch";
+            this.txtQrSearch.Size = new System.Drawing.Size(726, 38);
+            this.txtQrSearch.TabIndex = 1;
+            this.txtQrSearch.TextChanged += new System.EventHandler(this.txtQrSearch_TextChanged);
             // 
-            // lblFilterQr
+            // lblQrSearch
             // 
-            this.lblFilterQr.AutoSize = true;
-            this.lblFilterQr.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F);
-            this.lblFilterQr.Location = new System.Drawing.Point(5, 8);
-            this.lblFilterQr.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.lblFilterQr.Name = "lblFilterQr";
-            this.lblFilterQr.Size = new System.Drawing.Size(92, 31);
-            this.lblFilterQr.TabIndex = 0;
-            this.lblFilterQr.Text = "二维码:";
-            // 
-            // cboQr
-            // 
-            this.cboQr.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.cboQr.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cboQr.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F);
-            this.cboQr.Location = new System.Drawing.Point(5, 44);
-            this.cboQr.Margin = new System.Windows.Forms.Padding(4);
-            this.cboQr.Name = "cboQr";
-            this.cboQr.Size = new System.Drawing.Size(726, 39);
-            this.cboQr.TabIndex = 1;
-            this.cboQr.SelectedIndexChanged += new System.EventHandler(this.cboQr_SelectedIndexChanged);
+            this.lblQrSearch.AutoSize = true;
+            this.lblQrSearch.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F);
+            this.lblQrSearch.Location = new System.Drawing.Point(5, 8);
+            this.lblQrSearch.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lblQrSearch.Name = "lblQrSearch";
+            this.lblQrSearch.Size = new System.Drawing.Size(140, 31);
+            this.lblQrSearch.TabIndex = 0;
+            this.lblQrSearch.Text = "二维码搜索:";
             // 
             // btnQrStatistics
             // 
             this.btnQrStatistics.Dock = System.Windows.Forms.DockStyle.Top;
             this.btnQrStatistics.Enabled = false;
             this.btnQrStatistics.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F);
-            this.btnQrStatistics.Location = new System.Drawing.Point(15, 213);
+            this.btnQrStatistics.Location = new System.Drawing.Point(15, 163);
             this.btnQrStatistics.Margin = new System.Windows.Forms.Padding(0, 6, 0, 0);
             this.btnQrStatistics.Name = "btnQrStatistics";
             this.btnQrStatistics.Size = new System.Drawing.Size(740, 50);
@@ -293,20 +281,6 @@ namespace CCS_Traceback
             this.btnQrStatistics.Text = "按二维码统计";
             this.btnQrStatistics.UseVisualStyleBackColor = true;
             this.btnQrStatistics.Click += new System.EventHandler(this.btnQrStatistics_Click);
-            // 
-            // btnScanFiles
-            // 
-            this.btnScanFiles.Dock = System.Windows.Forms.DockStyle.Top;
-            this.btnScanFiles.Enabled = false;
-            this.btnScanFiles.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F);
-            this.btnScanFiles.Location = new System.Drawing.Point(15, 163);
-            this.btnScanFiles.Margin = new System.Windows.Forms.Padding(0, 6, 0, 0);
-            this.btnScanFiles.Name = "btnScanFiles";
-            this.btnScanFiles.Size = new System.Drawing.Size(740, 50);
-            this.btnScanFiles.TabIndex = 1;
-            this.btnScanFiles.Text = "扫描文件";
-            this.btnScanFiles.UseVisualStyleBackColor = true;
-            this.btnScanFiles.Click += new System.EventHandler(this.btnScanFiles_Click);
             // 
             // btnUpdate
             // 
@@ -429,11 +403,11 @@ namespace CCS_Traceback
             // 
             this.txtImgDefect.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F, System.Drawing.FontStyle.Bold);
             this.txtImgDefect.ForeColor = System.Drawing.Color.Red;
-            this.txtImgDefect.Location = new System.Drawing.Point(720, -8);
+            this.txtImgDefect.Location = new System.Drawing.Point(867, -7);
             this.txtImgDefect.Margin = new System.Windows.Forms.Padding(4);
             this.txtImgDefect.Name = "txtImgDefect";
             this.txtImgDefect.ReadOnly = true;
-            this.txtImgDefect.Size = new System.Drawing.Size(350, 38);
+            this.txtImgDefect.Size = new System.Drawing.Size(312, 38);
             this.txtImgDefect.TabIndex = 5;
             this.txtImgDefect.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
@@ -441,7 +415,7 @@ namespace CCS_Traceback
             // 
             this.lblImgDefect.AutoSize = true;
             this.lblImgDefect.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F);
-            this.lblImgDefect.Location = new System.Drawing.Point(596, 0);
+            this.lblImgDefect.Location = new System.Drawing.Point(752, 0);
             this.lblImgDefect.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblImgDefect.Name = "lblImgDefect";
             this.lblImgDefect.Size = new System.Drawing.Size(116, 31);
@@ -452,11 +426,11 @@ namespace CCS_Traceback
             // 
             this.txtImgAlias.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F, System.Drawing.FontStyle.Bold);
             this.txtImgAlias.ForeColor = System.Drawing.Color.Red;
-            this.txtImgAlias.Location = new System.Drawing.Point(442, -8);
+            this.txtImgAlias.Location = new System.Drawing.Point(394, -8);
             this.txtImgAlias.Margin = new System.Windows.Forms.Padding(4);
             this.txtImgAlias.Name = "txtImgAlias";
             this.txtImgAlias.ReadOnly = true;
-            this.txtImgAlias.Size = new System.Drawing.Size(118, 38);
+            this.txtImgAlias.Size = new System.Drawing.Size(350, 38);
             this.txtImgAlias.TabIndex = 3;
             this.txtImgAlias.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
@@ -464,18 +438,18 @@ namespace CCS_Traceback
             // 
             this.lblImgAlias.AutoSize = true;
             this.lblImgAlias.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F);
-            this.lblImgAlias.Location = new System.Drawing.Point(356, -1);
+            this.lblImgAlias.Location = new System.Drawing.Point(305, 0);
             this.lblImgAlias.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblImgAlias.Name = "lblImgAlias";
-            this.lblImgAlias.Size = new System.Drawing.Size(68, 31);
+            this.lblImgAlias.Size = new System.Drawing.Size(92, 31);
             this.lblImgAlias.TabIndex = 2;
-            this.lblImgAlias.Text = "编号:";
+            this.lblImgAlias.Text = "文件名:";
             // 
             // txtImgQr
             // 
             this.txtImgQr.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F, System.Drawing.FontStyle.Bold);
             this.txtImgQr.ForeColor = System.Drawing.Color.Red;
-            this.txtImgQr.Location = new System.Drawing.Point(125, -8);
+            this.txtImgQr.Location = new System.Drawing.Point(93, -7);
             this.txtImgQr.Margin = new System.Windows.Forms.Padding(4);
             this.txtImgQr.Name = "txtImgQr";
             this.txtImgQr.ReadOnly = true;
@@ -487,7 +461,7 @@ namespace CCS_Traceback
             // 
             this.lblImgQr.AutoSize = true;
             this.lblImgQr.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F);
-            this.lblImgQr.Location = new System.Drawing.Point(34, 4);
+            this.lblImgQr.Location = new System.Drawing.Point(4, 0);
             this.lblImgQr.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblImgQr.Name = "lblImgQr";
             this.lblImgQr.Size = new System.Drawing.Size(92, 31);
@@ -498,7 +472,7 @@ namespace CCS_Traceback
             // 
             this.txtImgTime.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F, System.Drawing.FontStyle.Bold);
             this.txtImgTime.ForeColor = System.Drawing.Color.Red;
-            this.txtImgTime.Location = new System.Drawing.Point(1207, -8);
+            this.txtImgTime.Location = new System.Drawing.Point(1264, -8);
             this.txtImgTime.Margin = new System.Windows.Forms.Padding(4);
             this.txtImgTime.Name = "txtImgTime";
             this.txtImgTime.ReadOnly = true;
@@ -510,7 +484,7 @@ namespace CCS_Traceback
             // 
             this.lblImgTime.AutoSize = true;
             this.lblImgTime.Font = new System.Drawing.Font("Microsoft YaHei UI", 12F);
-            this.lblImgTime.Location = new System.Drawing.Point(1131, 4);
+            this.lblImgTime.Location = new System.Drawing.Point(1187, 0);
             this.lblImgTime.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblImgTime.Name = "lblImgTime";
             this.lblImgTime.Size = new System.Drawing.Size(68, 31);
@@ -546,12 +520,10 @@ namespace CCS_Traceback
             // 
             // picImagePreview
             // 
-            this.picImagePreview.BackColor = System.Drawing.Color.Black;
             this.picImagePreview.Dock = System.Windows.Forms.DockStyle.Fill;
             this.picImagePreview.Location = new System.Drawing.Point(0, 0);
             this.picImagePreview.Name = "picImagePreview";
             this.picImagePreview.Size = new System.Drawing.Size(1562, 810);
-            this.picImagePreview.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.picImagePreview.TabIndex = 1;
             this.picImagePreview.TabStop = false;
             this.picImagePreview.Visible = false;
@@ -589,7 +561,6 @@ namespace CCS_Traceback
             this.lblStatsText.Name = "lblStatsText";
             this.lblStatsText.Size = new System.Drawing.Size(304, 286);
             this.lblStatsText.TabIndex = 2;
-            this.lblStatsText.Text = "";
             // 
             // pnlChartPanel
             // 
@@ -614,7 +585,7 @@ namespace CCS_Traceback
             this.pnlChartBox.TabIndex = 0;
             this.pnlChartBox.Paint += new System.Windows.Forms.PaintEventHandler(this.pnlChartBox_Paint);
             this.pnlChartBox.Resize += new System.EventHandler(this.pnlChartBox_Resize);
-            //
+            // 
             // lblChartTitle
             // 
             this.lblChartTitle.AutoSize = true;
@@ -625,7 +596,7 @@ namespace CCS_Traceback
             this.lblChartTitle.Size = new System.Drawing.Size(164, 31);
             this.lblChartTitle.TabIndex = 0;
             this.lblChartTitle.Text = "缺陷类型统计:";
-            //
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 18F);
@@ -647,6 +618,7 @@ namespace CCS_Traceback
             ((System.ComponentModel.ISupportInitialize)(this.dgvNgList)).EndInit();
             this.pnlFilters.ResumeLayout(false);
             this.pnlFilters.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvQrMatches)).EndInit();
             this.pnlTime.ResumeLayout(false);
             this.pnlTime.PerformLayout();
             this.tlpRight.ResumeLayout(false);
@@ -654,12 +626,9 @@ namespace CCS_Traceback
             this.pnlImageInfo.PerformLayout();
             this.pnlImageBox.ResumeLayout(false);
             this.pnlImageBox.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.picImagePreview)).EndInit();
             this.pnlStats.ResumeLayout(false);
             this.pnlStats.PerformLayout();
             this.pnlChartPanel.ResumeLayout(false);
-            this.pnlChartBox.ResumeLayout(false);
-            this.pnlChartBox.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -674,14 +643,12 @@ namespace CCS_Traceback
         private System.Windows.Forms.MaskedTextBox mtbEndTime;
         private System.Windows.Forms.Button btnUpdate;
         private System.Windows.Forms.Button btnQrStatistics;
-        private System.Windows.Forms.Button btnScanFiles;
         private System.Windows.Forms.Panel pnlFilters;
-        private System.Windows.Forms.Label lblFilterQr;
-        private System.Windows.Forms.ComboBox cboQr;
-        private System.Windows.Forms.Label lblFilterAlias;
-        private System.Windows.Forms.ComboBox cboAlias;
-        private System.Windows.Forms.Label lblFilterDefect;
-        private System.Windows.Forms.ComboBox cboDefect;
+        private System.Windows.Forms.Label lblQrSearch;
+        private System.Windows.Forms.TextBox txtQrSearch;
+        private System.Windows.Forms.DataGridView dgvQrMatches;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colMatchQr;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colMatchCount;
         private System.Windows.Forms.Label lblNgList;
         private System.Windows.Forms.DataGridView dgvNgList;
         private System.Windows.Forms.DataGridViewTextBoxColumn colNgSeq;
@@ -701,7 +668,7 @@ namespace CCS_Traceback
         private System.Windows.Forms.TextBox txtImgTime;
         private System.Windows.Forms.Panel pnlImageBox;
         private System.Windows.Forms.Label lblImagePlaceholder;
-        private System.Windows.Forms.PictureBox picImagePreview;
+        private Cyotek.Windows.Forms.ImageBox picImagePreview;
         private System.Windows.Forms.TextBox txtImageTextPreview;
         private System.Windows.Forms.Panel pnlStats;
         private System.Windows.Forms.Label lblChartTitle;

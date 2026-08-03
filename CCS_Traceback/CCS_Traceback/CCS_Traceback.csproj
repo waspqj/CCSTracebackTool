@@ -45,6 +45,9 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
+    <Reference Include="Cyotek.Windows.Forms.ImageBox">
+      <HintPath>libs\Cyotek.Windows.Forms.ImageBox.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DetectionRecord.cs" />
