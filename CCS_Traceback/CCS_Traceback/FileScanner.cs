@@ -145,7 +145,7 @@ namespace CCS_Traceback
         private static DetectionRecord NewFileRecord(string qr, string alias, DateTime date, string fullPath)
         {
             string fname = Path.GetFileName(fullPath);
-            DateTime? parsed = ParseTimeFromFileName(fname);
+            DateTime? parsed = ParseTimeFromFileName(fname, out string rawMillis);
             TimeSpan tod = parsed.HasValue ? parsed.Value.TimeOfDay : TimeSpan.Zero;
             return new DetectionRecord
             {
@@ -155,6 +155,7 @@ namespace CCS_Traceback
                 Time = date.Date + tod,
                 FileName = fname,
                 FilePath = fullPath,
+                RawMillis = rawMillis,
             };
         }
 
@@ -224,16 +225,15 @@ namespace CCS_Traceback
         }
 
         /// <summary>
-        /// 文件名里抽时间戳:
+        /// 文件名里抽时间戳,out rawMillis 同时带回原始 4 位 ffff(供 NG 列表完整显示):
         ///   - 末尾形如 HHmmss_ffff:中间下划线在倒数第 5 位(6 位 HHmmss + 1 位 _ + 4 位 ffff)
-        ///     ffff 是相机写入的 4 位毫秒值(0000-9999,允许跨秒);
-        ///     整体作毫秒加到秒上,由 AddMilliseconds 自动处理进位。
-        ///     例 "030527_4143" → 03:05:31.143(进位 4 秒)。
-        ///   - 退回末尾 6 位纯数字 → HHmmss(无毫秒段,毫秒 = 0)
+        ///     rawMillis = 原始 4 位字符串(如 "4143");Time.Millisecond = ffff 取低 3 位 mod 1000(同秒内多帧能按写入顺序排开)。
+        ///   - 退回末尾 6 位纯数字 → HHmmss(无毫秒段,rawMillis = null,毫秒 = 0)
         /// 找不到就 null(让 NewFileRecord 退回当天日期)。
         /// </summary>
-        private static DateTime? ParseTimeFromFileName(string fname)
+        private static DateTime? ParseTimeFromFileName(string fname, out string rawMillis)
         {
+            rawMillis = null;
             if (string.IsNullOrEmpty(fname)) return null;
 
             int dot = fname.LastIndexOf('.');
@@ -248,9 +248,11 @@ namespace CCS_Traceback
                 if (hms.All(char.IsDigit) && fff.All(char.IsDigit)
                     && TryParseHms(hms, out var t))
                 {
-                    // ffff 整体作毫秒(0000-9999,可跨秒):AddMilliseconds 自动进位到秒/分
+                    // ffff 取低 3 位 mod 1000 作毫秒;rawMillis 带原 4 位字符串回 NewFileRecord
+                    rawMillis = fff;
                     int frame = int.Parse(fff);
-                    return t.AddMilliseconds(frame);
+                    int ms = frame % 1000;
+                    return new DateTime(t.Year, t.Month, t.Day, t.Hour, t.Minute, t.Second, ms);
                 }
             }
 

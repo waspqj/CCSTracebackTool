@@ -18,6 +18,8 @@ namespace CCS_Traceback
         public string FileReason { get; set; }
         public string FilePath { get; set; }
         public string FileName { get; set; }
+        /// <summary>NG 文件名里抽出的原始 4 位毫秒段(ffff);CSV 记录没有此字段。MainForm 显示时间列时用它拼出完整 4 位毫秒。</summary>
+        public string RawMillis { get; set; }
 
         public string StatusRaw => (ResultRaw ?? string.Empty).Trim().ToUpperInvariant();
         public bool IsNg => StatusRaw == "N";

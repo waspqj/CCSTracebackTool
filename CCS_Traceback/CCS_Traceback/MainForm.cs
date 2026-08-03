@@ -193,10 +193,13 @@ namespace CCS_Traceback
                     : $"{f.ProcessName}_{leadingSeq}";
 
                 seq++;
+                // NG 文件 → 拼原始 4 位毫秒(RawMillis);CSV 记录或退回 HHmmss 6 位的 → fff 3 位
+                string msText = f.RawMillis ?? f.Time.ToString("fff");
+                string timeText = f.Time.ToString("HH:mm:ss") + "." + msText;
                 dgvNgList.Rows.Add(
                     seq.ToString(),
                     displayName,
-                    f.Time.ToString("HH:mm:ss.fff"),
+                    timeText,
                     f.FileReason ?? "",
                     f.FilePath ?? "");
                 dgvNgList.Rows[dgvNgList.Rows.Count - 1].Tag = f;   // 双击时反查 NG 文件
