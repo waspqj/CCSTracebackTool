@@ -19,3 +19,9 @@ bin-release/
 
 *.vsidx
 *.db*
+
+# Visual Studio IDE cache
+.vs/
+# .NET build output
+bin/
+obj/
